@@ -11,11 +11,12 @@ class Home {
   }
 
   buildHierarchyFromCSV_5_Verbs(csvData) {
-    let root = { name: "", children: [] };
-  
+    let root = { name: "root", children: [] };
     csvData.forEach(row => {
+      const columns = Object.keys(row)
+      const verbs = columns.slice(0, columns.length-2)
       let current = root;
-      ["verb1", "verb2", "verb3", "verb4", "verb5"].forEach(verbKey => {
+      verbs.forEach(verbKey => {
         const verbValue = row[verbKey];
         if (verbValue) {
           let child = current.children.find(c => c.name === verbValue);
@@ -50,17 +51,6 @@ class Home {
     .attr('fill', 'none')
     .attr('stroke', 'black')
 
-  const toolTips = this.g.append('g').attr('class', 'tooltips').style('display', 'none')
-
-  toolTips.append('rect')
-  .attr('width', 100)
-  .attr('height', 50)
-  .style('fill', '#0080FF80')
-  .attr('rx', '10')
-  .attr('ry', '10')
-
-  toolTips.append('text')
-  .attr('font-size', '12px');
 
     // this.g
     // .selectAll('text')
@@ -79,7 +69,20 @@ class Home {
     .join('circle')
     .attr('cx', d=>d.y)
     .attr('cy', d=> d.x)
-    .attr('r', '10')
+    .attr('r', '3')
+
+    const toolTips = this.g.append('g').attr('class', 'tooltips').style('display', 'none')
+
+    toolTips.append('rect')
+    .attr('width', 100)
+    .attr('height', 50)
+    .style('fill', '#0080FF')
+    .attr('rx', '10')
+    .attr('ry', '10')
+  
+    toolTips.append('text')
+    .attr('font-size', '12px')
+    .attr('color', 'red')
 
     nodes.on('mouseover', function() {
       toolTips.style('display', 'block')     
