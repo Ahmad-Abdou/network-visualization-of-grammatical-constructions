@@ -1,6 +1,5 @@
-const width = 1300
-const height = 800
 
-const home = new Home('#container', width, height)
+const container = document.querySelector('.container')
+const home = new Home('#container', container.clientWidth, container.clientHeight)
 
-home.render('./data/five.csv')
+home.buildHirearchy('./data/five.csv')

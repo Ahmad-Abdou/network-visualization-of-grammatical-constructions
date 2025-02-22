@@ -1,12 +1,16 @@
+.container{
+  width: 100%;
+  height: 100vh;
+}
 text{
-  text-shadow: 
+  /* text-shadow: 
   -1px  -1px 3px white,
   -1px   1px 3px white,
    1px  -1px 3px white,
-   1px   1px 3px white;
+   1px   1px 3px white; */
   pointer-events: none;
 }
 path{
   fill: none;
-  stroke:lightgray
+  stroke:lightgray;
 }
