@@ -8,27 +8,44 @@ class Home {
     this.innerHeight = this.height - this.margin.top - this.margin.bottom
     this.svg = d3.select('.container').append('svg').attr('width', this.width).attr('height', this.height)
     this.g = this.svg.append('g').attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)
+    this.verbKeys = null
+    this.timeValues = null
+    this.frequenciesValues = null 
   }
 
   buildHierarchyFromCSV_5_Verbs(csvData) {
     let root = { name: "root", children: [] };
     csvData.forEach(row => {
       const columns = Object.keys(row)
-      const verbs = columns.slice(0, columns.length-2)
+      // this.verbKeys = columns.slice(0, columns.length-2)
+      // this.frequenciesKeys = columns[columns.length - 1]
+      // this.timeKeys = columns[columns.length - 2]
+
       let current = root;
-      verbs.forEach(verbKey => {
-        const verbValue = row[verbKey];
-        if (verbValue) {
-          let child = current.children.find(c => c.name === verbValue);
-          if (!child) {
-            child = { name: verbValue, children: [] };
-            current.children.push(child);
+      columns.forEach(verbKey => {
+        if(verbKey.startsWith('year')) {
+          this.timeValues = row[verbKey]
+        } else if(verbKey.startsWith('frequency')) {
+          this.frequenciesValues = row[verbKey]
+        } else if(verbKey.startsWith('verb')) {
+          const verbValue = row[verbKey];
+          if (verbValue) {
+            let child = current.children.find(c => c.name === verbValue);
+            if (!child) {
+              child = { name: verbValue, time:this.timeValues, frequency : this.frequenciesValues, children: [] };
+              current.children.push(child);
+            }
+            current = child;
           }
-          current = child;
+        } else if (verbKey.startsWith('year')) {
+          const yearKey = row[verbKey]
+          if(yearKey) {
+
+          }
         }
       });
     });
-  
+    
     return root;
   }
   buildHirearchy(file) {
@@ -51,7 +68,7 @@ class Home {
     .attr('fill', 'none')
     .attr('stroke', 'black')
 
-
+    this.svg.selectAll('text').data()
     // this.g
     // .selectAll('text')
     // .data(root.descendants())
@@ -74,12 +91,13 @@ class Home {
     const toolTips = this.g.append('g').attr('class', 'tooltips').style('display', 'none')
 
     toolTips.append('rect')
-    .attr('width', 100)
-    .attr('height', 50)
+    .attr('width', 150)
+    .attr('height', 90)
     .style('fill', '#0080FF')
     .attr('rx', '10')
     .attr('ry', '10')
-  
+    .attr('y', '-60')
+
     toolTips.append('text')
     .attr('font-size', '12px')
     .attr('color', 'red')
@@ -91,13 +109,16 @@ class Home {
       toolTips.attr('transform', `translate(${x - 50},${y - 60})`);
       toolTips.selectAll('#tooltip-text').remove();
 
-      toolTips.append('text')
+      toolTips.selectAll('text')
       .attr('id', 'tooltip-text')
-      .data(data)
-      .text(d => d.data.name)
-      .attr('x', 50)
-      .attr('y', 30)
+      .data([`Name: ${data.data.name}`,
+            `Year: ${data.data.time}`,
+            `Frequency: ${data.data.frequency}`])
+      .join('text')
+      .attr('x', 75)
+      .attr('y', (d,i) => (30 * i) -40)
       .attr('text-anchor', 'middle')
+      .text(d=>d)
 
       toolTips.style('display', 'block')     
     }).on('mouseout', function() {
