@@ -6,21 +6,20 @@ class Home {
     this.margin = {top:50, right : 50, bottom: 50, left: 50}
     this.innerWidth = this.width - this.margin.left - this.margin.right
     this.innerHeight = this.height - this.margin.top - this.margin.bottom
-    this.svg = d3.select('.container').append('svg').attr('width', this.width).attr('height', this.height)
+    this.svg = d3.select('.tree-container').append('svg').attr('width', this.width).attr('height', this.height)
     this.g = this.svg.append('g').attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)
     this.verbKeys = null
     this.timeValues = null
-    this.frequenciesValues = null 
+    this.frequenciesValues = null
+    this.sliderValue = null
+    this.menu = document.querySelector('.menu')
+
   }
 
   buildHierarchyFromCSV_5_Verbs(csvData) {
     let root = { name: "root", children: [] };
     csvData.forEach(row => {
       const columns = Object.keys(row)
-      // this.verbKeys = columns.slice(0, columns.length-2)
-      // this.frequenciesKeys = columns[columns.length - 1]
-      // this.timeKeys = columns[columns.length - 2]
-
       let current = root;
       columns.forEach(verbKey => {
         if(verbKey.startsWith('year')) {
@@ -32,20 +31,14 @@ class Home {
           if (verbValue) {
             let child = current.children.find(c => c.name === verbValue);
             if (!child) {
-              child = { name: verbValue, time:this.timeValues, frequency : this.frequenciesValues, children: [] };
+              child = { name: verbValue, year:row['year'], frequency : row['frequency'], children: [] };
               current.children.push(child);
             }
             current = child;
           }
-        } else if (verbKey.startsWith('year')) {
-          const yearKey = row[verbKey]
-          if(yearKey) {
-
-          }
         }
       });
     });
-    
     return root;
   }
   buildHirearchy(file) {
@@ -57,18 +50,46 @@ class Home {
     const links = treeLayout(root).links()
     const linkPathGenerator = d3.linkHorizontal().x(d => d.y).y(d => d.x)
 
+
+    const frequencyExtent = d3.extent(links, d=> d.target.data.frequency)
+    const StrokeScale = d3.scaleLinear().domain(frequencyExtent).range([1, 5])
+    const opacityScale = d3.scaleLinear().domain(frequencyExtent).range([0.5, 1])
+
+    const timeScale = d3.extent(links, d=> d.target.data.year)
+
+    const filteredNodes = root.descendants().filter((row) => row.data.frequency > this.sliderValue)
+    const filteredLinks = links.filter(link => link.target.data.frequency > this.sliderValue)
+
+    const slider = document.createElement('input')
+    slider.type = 'range'
+    slider.min = timeScale[0]
+    slider.max = timeScale[1]
+    slider.value = this.sliderValue
+    slider.classList = 'filter-slide'
+    const sliderValue = document.createElement('p')
+    sliderValue.classList = 'slider-value'
+    slider.addEventListener('input', (e) => {
+      sliderValue.textContent = e.target.value
+      this.sliderValue = e.target.value
+      
+    })
+    this.menu.appendChild(slider)
+    this.menu.appendChild(sliderValue)
+
+
     this.svg.call(d3.zoom().on('zoom', (event) => {
       this.g.attr('transform', event.transform)
     }))
 
     this.g.selectAll('path')
-    .data(links)
+    .data(filteredLinks)
     .join('path')
     .attr('d', linkPathGenerator)
     .attr('fill', 'none')
     .attr('stroke', 'black')
+    .attr('stroke-width', d => StrokeScale(d.target.data.frequency))
+    .attr('stroke-opacity', d => opacityScale(d.target.data.frequency))
 
-    this.svg.selectAll('text').data()
     // this.g
     // .selectAll('text')
     // .data(root.descendants())
@@ -79,24 +100,29 @@ class Home {
     // .text(d => d.data.name )
     // .attr('text-anchor', 'middle')
     // .attr('font-size', d => Math.max(12 - d.depth * 2, 15) + 'px')
+    
+
 
     const nodes = this.g
     .selectAll('circle')
-    .data(root.descendants())
+    .attr('class', 'nodes')
+    .data(filteredNodes)
     .join('circle')
     .attr('cx', d=>d.y)
     .attr('cy', d=> d.x)
-    .attr('r', '3')
+    .attr('r', '4')
 
     const toolTips = this.g.append('g').attr('class', 'tooltips').style('display', 'none')
 
     toolTips.append('rect')
+    .attr('class', 'rect-tooltips')
     .attr('width', 150)
     .attr('height', 90)
     .style('fill', '#0080FF')
     .attr('rx', '10')
     .attr('ry', '10')
-    .attr('y', '-60')
+    .attr('y', '-40')
+    .attr('x', '-60')
 
     toolTips.append('text')
     .attr('font-size', '12px')
@@ -112,11 +138,11 @@ class Home {
       toolTips.selectAll('text')
       .attr('id', 'tooltip-text')
       .data([`Name: ${data.data.name}`,
-            `Year: ${data.data.time}`,
+            `Year: ${data.data.year}`,
             `Frequency: ${data.data.frequency}`])
       .join('text')
-      .attr('x', 75)
-      .attr('y', (d,i) => (30 * i) -40)
+      .attr('x', 20)
+      .attr('y', (d,i) => (30 * i) -20)
       .attr('text-anchor', 'middle')
       .text(d=>d)
 
@@ -127,10 +153,7 @@ class Home {
     })
     })
 
-
-
-
-
   }
+  
 }
 

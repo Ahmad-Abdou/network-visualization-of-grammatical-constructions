@@ -1,6 +1,6 @@
 
-const container = document.querySelector('.container')
-const home = new Home('#container', container.clientWidth, container.clientHeight)
+const container = document.querySelector('.tree-container')
+const home = new Home('#tree-container', container.clientWidth, container.clientHeight)
 
 window.onload = function() {
   document.querySelector('.file-input').addEventListener('change', getFileName);

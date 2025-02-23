@@ -1,29 +1,51 @@
+:root {
+  --blue: #0080FF;
+  --grey: lightgray;
+  --med-size: 18px;
+}
+
 .container{
+  display: flex;
+  gap: 5px;
   width: 100%;
   height: 100vh;
+  overflow: hidden;
 }
-text{
-  pointer-events: none;
+
+.tree-container{
+  width: 80%;
+  height: 97%;
+  border: 1px solid var(--grey);
 }
-path{
-  fill: none;
-  stroke:lightgray;
+.menu{
+  width:20%;
+  height: 100%;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 5px;
+  
 }
 .select-file{
-  position: relative;
-  top: 20px;
-  background-color: #0080FF;
+  background-color: var(--blue);
   border: none;
-  width: 80px;
+  width: 100%;
+  height: 20px;
   padding: 10px;
   box-shadow: 1px 1px 5px 1px black;
   cursor: pointer;
+  text-align: center;
+  color: white;
+  font-size: var(--med-size);
+
 }
 
 .select-file input[type=file] {
     position: absolute;
+    height: 20px;
     top: 0;
-    left: 0;
+    right: 0;
     width: 90px;
     height: 35px;
     outline: none;
@@ -31,7 +53,25 @@ path{
     opacity: 0;
 }
 
-.select-file:hover {
-  transform: scale(1.1);
+.slider-value{
+  font-size: 20px;
+  position: relative;
+  bottom: 35px;
+}
+.select-file:hover, .filter-btn:hover {
+  transform: scale(1.01);
   cursor: pointer;
+}
+
+.filter-slide{
+  border: 2px solid var(--grey);
+}
+text{
+  pointer-events: none;
+}
+path{
+  fill: none;
+}
+.rect-tooltips{
+  z-index: 10000;
 }
