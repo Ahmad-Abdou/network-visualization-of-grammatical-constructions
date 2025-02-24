@@ -12,7 +12,6 @@ class Home {
     this.timeValues = null
     this.frequenciesValues = null
     this.sliderValue = null
-    this.menu = document.querySelector('.menu')
 
   }
 
@@ -60,22 +59,17 @@ class Home {
     const filteredNodes = root.descendants().filter((row) => row.data.frequency > this.sliderValue)
     const filteredLinks = links.filter(link => link.target.data.frequency > this.sliderValue)
 
-    const slider = document.createElement('input')
-    slider.type = 'range'
+    const slider = document.querySelector('.filter-slide')
     slider.min = timeScale[0]
     slider.max = timeScale[1]
     slider.value = this.sliderValue
-    slider.classList = 'filter-slide'
-    const sliderValue = document.createElement('p')
-    sliderValue.classList = 'slider-value'
-    slider.addEventListener('input', (e) => {
-      sliderValue.textContent = e.target.value
-      this.sliderValue = e.target.value
-      
-    })
-    this.menu.appendChild(slider)
-    this.menu.appendChild(sliderValue)
 
+    let filterValue = document.querySelector('.filter-value')
+
+    slider.addEventListener('input', (e) => {
+      this.sliderValue = e.target.value
+      filterValue.textContent = e.target.value
+    })
 
     this.svg.call(d3.zoom().on('zoom', (event) => {
       this.g.attr('transform', event.transform)
@@ -110,7 +104,7 @@ class Home {
     .join('circle')
     .attr('cx', d=>d.y)
     .attr('cy', d=> d.x)
-    .attr('r', '4')
+    .attr('r', d => Math.max(12 - d.depth * 2, 3) + 'px')
 
     const toolTips = this.g.append('g').attr('class', 'tooltips').style('display', 'none')
 
