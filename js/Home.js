@@ -12,7 +12,9 @@ class Home {
     this.timeValues = null
     this.frequenciesValues = null
     this.sliderValue = null
-
+    this.svg.call(d3.zoom().on('zoom', (event) => {
+      this.g.attr('transform', event.transform)
+    }))
   }
 
   buildHierarchyFromCSV_5_Verbs(csvData) {
@@ -49,65 +51,102 @@ class Home {
     const links = treeLayout(root).links()
     const linkPathGenerator = d3.linkHorizontal().x(d => d.y).y(d => d.x)
 
-
     const frequencyExtent = d3.extent(links, d=> d.target.data.frequency)
     const StrokeScale = d3.scaleLinear().domain(frequencyExtent).range([1, 5])
     const opacityScale = d3.scaleLinear().domain(frequencyExtent).range([0.5, 1])
 
     const timeScale = d3.extent(links, d=> d.target.data.year)
 
-    const filteredNodes = root.descendants().filter((row) => row.data.frequency > this.sliderValue)
-    const filteredLinks = links.filter(link => link.target.data.frequency > this.sliderValue)
-
     const slider = document.querySelector('.filter-slide')
     slider.min = timeScale[0]
     slider.max = timeScale[1]
-    slider.value = this.sliderValue
+    slider.value = timeScale[0]
 
-    let filterValue = document.querySelector('.filter-value')
+    const filterValue = document.querySelector('.filter-value')
+    filterValue.textContent = timeScale[0]
+
+    let filterPathByYear = links
+    let filterNodesByYear = root.descendants()
+    self = this
+    
+    const renderVisualization = (pathData, nodeData) => {
+    self.currentPathData = pathData;
+    self.currentNodeData = nodeData;
+
+    self.g.selectAll('path').remove();
+    self.g.selectAll('circle').remove();
+    
+    try {
+        self.g.selectAll('path')
+            .data(pathData)
+            .join('path')
+            .attr('d', linkPathGenerator)
+            .attr('fill', 'none')
+            .attr('stroke', 'black')
+            .attr('stroke-width', d => StrokeScale(d.target.data.frequency))
+            .attr('stroke-opacity', d => opacityScale(d.target.data.frequency));
+
+        const nodes = self.g.selectAll('circle')
+            .data(nodeData)
+            .join('circle')
+            .attr('class', 'nodes')
+            .attr('cx', d => d.y)
+            .attr('cy', d => d.x)
+            .attr('r', d => Math.max(12 - d.depth * 2, 3) + 'px');
+
+        self.toolTipsImpl(nodes);
+    } catch (error) {
+        console.error('Render error:', error);
+        if (self.lastGoodPathData && self.lastGoodNodeData) {
+            renderVisualization(self.lastGoodPathData, self.lastGoodNodeData);
+        }
+    }
+    self.lastGoodPathData = pathData;
+    self.lastGoodNodeData = nodeData;
+  }
+
+      function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    const debouncedRender = debounce((pathData, nodeData) => {
+        renderVisualization(pathData, nodeData);
+    }, 100);
 
     slider.addEventListener('input', (e) => {
-      this.sliderValue = e.target.value
-      filterValue.textContent = e.target.value
-    })
+        self.sliderValue = e.target.value;
+        filterValue.textContent = e.target.value;
+        
+        filterPathByYear = links.filter(
+            link => Number(link.target.data.year) >= Number(self.sliderValue)
+        );
+        filterNodesByYear = root.descendants().filter(
+            row => Number(row.data.year) >= Number(self.sliderValue)
+        );
+        debouncedRender(filterPathByYear, filterNodesByYear);
+    });
 
-    this.svg.call(d3.zoom().on('zoom', (event) => {
-      this.g.attr('transform', event.transform)
-    }))
+    const resetBtn = document.querySelector('.reset-btn') || createResetButton();
+    resetBtn.addEventListener('click', () => {
+        slider.value = timeScale[0]
+        filterValue.textContent = timeScale[0];
+        renderVisualization(links, root.descendants());
+    });
 
-    this.g.selectAll('path')
-    .data(filteredLinks)
-    .join('path')
-    .attr('d', linkPathGenerator)
-    .attr('fill', 'none')
-    .attr('stroke', 'black')
-    .attr('stroke-width', d => StrokeScale(d.target.data.frequency))
-    .attr('stroke-opacity', d => opacityScale(d.target.data.frequency))
+  renderVisualization(filterPathByYear, filterNodesByYear);
+  })
+}
 
-    // this.g
-    // .selectAll('text')
-    // .data(root.descendants())
-    // .join('text')
-    // .attr('x', d=>d.y)
-    // .attr('y', d=> d.x)
-    // .attr('dy', '1.5em')
-    // .text(d => d.data.name )
-    // .attr('text-anchor', 'middle')
-    // .attr('font-size', d => Math.max(12 - d.depth * 2, 15) + 'px')
-    
-
-
-    const nodes = this.g
-    .selectAll('circle')
-    .attr('class', 'nodes')
-    .data(filteredNodes)
-    .join('circle')
-    .attr('cx', d=>d.y)
-    .attr('cy', d=> d.x)
-    .attr('r', d => Math.max(12 - d.depth * 2, 3) + 'px')
-
+  toolTipsImpl(nodes) {
     const toolTips = this.g.append('g').attr('class', 'tooltips').style('display', 'none')
-
     toolTips.append('rect')
     .attr('class', 'rect-tooltips')
     .attr('width', 150)
@@ -145,9 +184,6 @@ class Home {
       toolTips.selectAll('#tooltip-text').remove()
       toolTips.style('display', 'none')     
     })
-    })
-
   }
-  
 }
 

@@ -1,8 +1,9 @@
 :root {
   --blue: #0080FF;
   --grey: lightgray;
-  --green: #fc5858;
+  --green: #fc6f6f;
   --med-size: 18px;
+  --font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif
 }
 
 .container{
@@ -39,7 +40,7 @@
   text-align: center;
   color: white;
   font-size: var(--med-size);
-
+  font-family: var(--font-family)
 }
 
 .select-file input[type=file] {
@@ -59,7 +60,7 @@
   position: relative;
   bottom: 35px;
 }
-.select-file:hover, .filter-btn:hover {
+.select-file:hover, .reset-btn:hover {
   transform: scale(1.01);
   cursor: pointer;
 }
@@ -84,18 +85,27 @@ path{
 }
 
 .filter-slide{
-  width: 73%;
+  width: 65%;
   
 }
-.filter-btn{
-  width: 22%;
+.reset-btn{
+  width: 15%;
   background-color: var(--green);
   color: white;
   border: none;
   padding: 5px;
   box-shadow: 1px 1px 5px 1px black;
-
+  height: 30px;
+  margin-top: 10px;
+  font-family: var(--font-family);
+  font-size: 16px;
 }
 .filter-value{
   font-size: 20px;
+  font-family: var(--font-family);
+}
+.year-filter{
+  font-size: 18px;
+  font-weight: 500;
+  font-family: var(--font-family);
 }
