@@ -1,7 +1,7 @@
 :root {
   --blue: #0080FF;
   --grey: lightgray;
-  --green: #fc6f6f;
+  --red: crimson;
   --med-size: 18px;
   --font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif
 }
@@ -90,7 +90,7 @@ path{
 }
 .reset-btn{
   width: 15%;
-  background-color: var(--green);
+  background-color: var(--red);
   color: white;
   border: none;
   padding: 5px;

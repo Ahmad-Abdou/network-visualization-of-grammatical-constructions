@@ -161,6 +161,24 @@ class Home {
     .attr('font-size', '12px')
     .attr('color', 'red')
 
+    nodes.on('click', function (event, d) {
+    const children = event.target.__data__.descendants()
+  
+    d3.selectAll('circle')
+    .attr('fill', 'black')
+    .attr('opacity', '1')
+
+
+    d3.selectAll('circle')
+    .filter(n => children.includes(n))
+    .attr('fill', 'crimson');
+  
+  d3.selectAll('circle')
+    .filter(n => !children.includes(n) && n !== d)
+    .attr('opacity', '0.1');
+
+    })
+
     nodes.on('mouseover', function() {
       toolTips.style('display', 'block')     
     }).on('mousemove', function(event, data) {
