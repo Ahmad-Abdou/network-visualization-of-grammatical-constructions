@@ -45,103 +45,70 @@ class Home {
   buildHirearchy(file) {
     d3.csv(file).then((csvData) => {
     const treeLayout = d3.tree().size([this.innerHeight, this.innerWidth])
-
     const nestedData = this.buildHierarchyFromCSV_5_Verbs(csvData);
     const root = d3.hierarchy(nestedData)
-    const links = treeLayout(root).links()
-    const linkPathGenerator = d3.linkHorizontal().x(d => d.y).y(d => d.x)
+    this.collapsable(root)
 
-    const frequencyExtent = d3.extent(links, d=> d.target.data.frequency)
-    const StrokeScale = d3.scaleLinear().domain(frequencyExtent).range([1, 5])
-    const opacityScale = d3.scaleLinear().domain(frequencyExtent).range([0.5, 1])
+  //   const links = treeLayout(root).links()
+  //   const linkPathGenerator = d3.linkHorizontal().x(d => d.y).y(d => d.x)
 
-    const timeScale = d3.extent(links, d=> d.target.data.year)
+  //   const frequencyExtent = d3.extent(links, d=> d.target.data.frequency)
+  //   const StrokeScale = d3.scaleLinear().domain(frequencyExtent).range([1, 5])
+  //   const opacityScale = d3.scaleLinear().domain(frequencyExtent).range([0.5, 1])
 
-    const slider = document.querySelector('.filter-slide')
-    slider.min = timeScale[0]
-    slider.max = timeScale[1]
-    slider.value = timeScale[0]
+  //   const timeScale = d3.extent(links, d=> d.target.data.year)
 
-    const filterValue = document.querySelector('.filter-value')
-    filterValue.textContent = timeScale[0]
+  //   const slider = document.querySelector('.filter-slide')
+  //   slider.min = timeScale[0]
+  //   slider.max = timeScale[1]
+  //   slider.value = timeScale[0]
 
-    let filterPathByYear = links
-    let filterNodesByYear = root.descendants()
-    self = this
+  //   const filterValue = document.querySelector('.filter-value')
+  //   filterValue.textContent = timeScale[0]
+
+  //   let filterPathByYear = links
+  //   let filterNodesByYear = root.descendants()
+  //   self = this
     
-    const renderVisualization = (pathData, nodeData) => {
-    self.currentPathData = pathData;
-    self.currentNodeData = nodeData;
+  //   const renderVisualization = (pathData, nodeData) => {
+  //   self.currentPathData = pathData;
+  //   self.currentNodeData = nodeData;
 
-    self.g.selectAll('path').remove();
-    self.g.selectAll('circle').remove();
+  //   self.g.selectAll('path').remove();
+  //   self.g.selectAll('circle').remove();
     
-    try {
-        self.g.selectAll('path')
-            .data(pathData)
-            .join('path')
-            .attr('d', linkPathGenerator)
-            .attr('fill', 'none')
-            .attr('stroke', 'black')
-            .attr('stroke-width', d => StrokeScale(d.target.data.frequency))
-            .attr('stroke-opacity', d => opacityScale(d.target.data.frequency));
+  //   try {
+  //       self.g.selectAll('path')
+  //           .data(pathData)
+  //           .join('path')
+  //           .attr('d', linkPathGenerator)
+  //           .attr('fill', 'none')
+  //           .attr('stroke', 'black')
+  //           .attr('stroke-width', d => StrokeScale(d.target.data.frequency))
+  //           .attr('stroke-opacity', d => opacityScale(d.target.data.frequency));
 
-        const nodes = self.g.selectAll('circle')
-            .data(nodeData)
-            .join('circle')
-            .attr('class', 'nodes')
-            .attr('cx', d => d.y)
-            .attr('cy', d => d.x)
-            .attr('r', d => Math.max(12 - d.depth * 2, 3) + 'px');
+  //       const nodes = self.g.selectAll('circle')
+  //           .data(nodeData)
+  //           .join('circle')
+  //           .attr('class', 'nodes')
+  //           .attr('cx', d => d.y)
+  //           .attr('cy', d => d.x)
+  //           .attr('r', d => Math.max(12 - d.depth * 2, 3) + 'px');
 
-        self.toolTipsImpl(nodes);
-    } catch (error) {
-        console.error('Render error:', error);
-        if (self.lastGoodPathData && self.lastGoodNodeData) {
-            renderVisualization(self.lastGoodPathData, self.lastGoodNodeData);
-        }
-    }
-    self.lastGoodPathData = pathData;
-    self.lastGoodNodeData = nodeData;
-  }
+  //       self.toolTipsImpl(nodes);
+  //   } catch (error) {
+  //       console.error('Render error:', error);
+  //       if (self.lastGoodPathData && self.lastGoodNodeData) {
+  //           renderVisualization(self.lastGoodPathData, self.lastGoodNodeData);
+  //       }
+  //   }
+  //   self.lastGoodPathData = pathData;
+  //   self.lastGoodNodeData = nodeData;
+  // }
 
-      function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
+  // this.Debouncer(renderVisualization, slider, filterValue, filterPathByYear, filterNodesByYear, links, root)
 
-    const debouncedRender = debounce((pathData, nodeData) => {
-        renderVisualization(pathData, nodeData);
-    }, 100);
-
-    slider.addEventListener('input', (e) => {
-        self.sliderValue = e.target.value;
-        filterValue.textContent = e.target.value;
-        
-        filterPathByYear = links.filter(
-            link => Number(link.target.data.year) >= Number(self.sliderValue)
-        );
-        filterNodesByYear = root.descendants().filter(
-            row => Number(row.data.year) >= Number(self.sliderValue)
-        );
-        debouncedRender(filterPathByYear, filterNodesByYear);
-    });
-
-    const resetBtn = document.querySelector('.reset-btn') || createResetButton();
-    resetBtn.addEventListener('click', () => {
-        slider.value = timeScale[0]
-        filterValue.textContent = timeScale[0];
-        renderVisualization(links, root.descendants());
-    });
-
-  renderVisualization(filterPathByYear, filterNodesByYear);
+  // renderVisualization(filterPathByYear, filterNodesByYear);
   })
 }
 
@@ -202,6 +169,175 @@ class Home {
       toolTips.selectAll('#tooltip-text').remove()
       toolTips.style('display', 'none')     
     })
+  }
+
+  collapsable(root) {
+
+  self = this
+
+  const dx = 15;
+  const dy = (this.width - this.margin.right - this.margin.left) / (1 + root.height);
+
+  const tree = d3.tree().nodeSize([dx, dy]);
+  const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
+
+      self.svg
+      .attr("viewBox", [-this.margin.left, -this.margin.top, this.width, this.height])
+      .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif; user-select: none;");
+
+  const gLink = this.svg.append("g")
+      .attr("fill", "none")
+      .attr("stroke", "#555")
+      .attr("stroke-opacity", 0.4)
+      .attr("stroke-width", 1.5);
+
+  const gNode = this.svg.append("g")
+      .attr("cursor", "pointer")
+      .attr("pointer-events", "all");
+
+
+  function update(event, source) {
+    const nodes = root.descendants().reverse();
+    const links = root.links();
+
+    tree(root);
+
+    let left = root;
+    let right = root;
+    let top = root;
+    let bottom = root;
+    const min_width = self.width
+    const min_height = self.height
+
+    root.eachBefore(node => {
+      if (node.x < left.x) left = node;
+      if (node.x > right.x) right = node;
+    });
+
+    const height = Math.max(right.x - left.x + self.margin.top + self.margin.bottom, min_height);
+    const width = Math.max(bottom.y - top.y + self.margin.left + self.margin.right, min_width);
+
+    const transition = self.svg.transition()
+        .duration(750)
+        .attr("height", height)
+        .attr("viewBox", [
+          -self.margin.left,            
+          left.x - self.margin.top,
+          Math.max(width, min_width),
+          Math.max(height, min_height)
+      ])
+        .tween("resize", window.ResizeObserver ? null : () => () => self.svg.dispatch("toggle"));
+
+    const node = gNode.selectAll("g")
+      .data(nodes, d => d.id);
+
+    const nodeEnter = node.enter().append("g")
+        .attr("transform", d => `translate(${source.y0},${source.x0})`)
+        .attr("fill-opacity", 0)
+        .attr("stroke-opacity", 0)
+        .on("click", (event, d) => {
+          d.children = d.children ? null : d._children;
+          update(event, d);
+        });
+
+    nodeEnter.append("circle")
+        .attr("r", d => d.depth === 0 ? 5 : 2.5)
+        .attr("fill", d => d._children ? "#555" : "#999")
+        .attr("stroke-width", 10);
+
+    nodeEnter.append("text")
+        .attr("dy", "0.31em")
+        .attr("x", d => d._children ? -6 : 6)
+        .attr("text-anchor", d => d._children ? "end" : "start")
+        .attr('font-size', d => d.depth === 0 ? '12px' : '10px')
+        .text(d => d.data.name)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-width", 3)
+        .attr("stroke", "white")
+        .attr("paint-order", "stroke");
+
+    const nodeUpdate = node.merge(nodeEnter).transition(transition)
+        .attr("transform", d => `translate(${d.y},${d.x})`)
+        .attr("fill-opacity", 1)
+        .attr("stroke-opacity", 1);
+
+    const nodeExit = node.exit().transition(transition).remove()
+        .attr("transform", d => `translate(${source.y},${source.x})`)
+        .attr("fill-opacity", 0)
+        .attr("stroke-opacity", 0);
+
+    const link = gLink.selectAll("path")
+      .data(links, d => d.target.id);
+
+    const linkEnter = link.enter().append("path")
+        .attr("d", d => {
+          const o = {x: source.x0, y: source.y0};
+          return diagonal({source: o, target: o});
+        });
+
+    link.merge(linkEnter).transition(transition)
+        .attr("d", diagonal);
+
+    link.exit().transition(transition).remove()
+        .attr("d", d => {
+          const o = {x: source.x, y: source.y};
+          return diagonal({source: o, target: o});
+        });
+
+    root.eachBefore(d => {
+      d.x0 = d.x;
+      d.y0 = d.y;
+    });
+  }
+  root.x0 = dy / 2;
+  root.y0 = 0;
+  root.descendants().forEach((d, i) => {
+    d.id = i;
+    d._children = d.children;
+    if (d.depth && d.data.name.length !== 7) d.children = null;
+  });
+
+  update(null, root);
+
+  return self.svg.node();
+  }
+
+  Debouncer(renderVisualization, slider, filterValue, filterPathByYear, filterNodesByYear, links, root) {
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+          const later = () => {
+              clearTimeout(timeout);
+              func(...args);
+          };
+          clearTimeout(timeout);
+          timeout = setTimeout(later, wait);
+      };
+  }
+
+  const debouncedRender = debounce((pathData, nodeData) => {
+      renderVisualization(pathData, nodeData);
+  }, 100);
+
+  slider.addEventListener('input', (e) => {
+      self.sliderValue = e.target.value;
+      filterValue.textContent = e.target.value;
+      
+      filterPathByYear = links.filter(
+          link => Number(link.target.data.year) >= Number(self.sliderValue)
+      );
+      filterNodesByYear = root.descendants().filter(
+          row => Number(row.data.year) >= Number(self.sliderValue)
+      );
+      debouncedRender(filterPathByYear, filterNodesByYear);
+  });
+
+  const resetBtn = document.querySelector('.reset-btn') || createResetButton();
+  resetBtn.addEventListener('click', () => {
+      slider.value = timeScale[0]
+      filterValue.textContent = timeScale[0];
+      renderVisualization(links, root.descendants());
+  });
   }
 }
 
