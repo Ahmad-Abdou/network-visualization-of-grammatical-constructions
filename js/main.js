@@ -11,3 +11,10 @@ const getFileName = (event) => {
   home.buildHirearchy(`./data/${fileName}`)
 }
 
+function notifyMessage (text) {
+  notification.textContent = text
+  notification.style.transform = 'translate(0, 50px)'
+  setTimeout(() => {
+    notification.style.transform = 'translate(0, -290px)'
+    }, 2000)
+}

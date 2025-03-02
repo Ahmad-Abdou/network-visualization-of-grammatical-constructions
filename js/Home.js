@@ -126,6 +126,7 @@ class Home {
       .data(nodes, d => d.id);
 
     const nodeEnter = node.enter().append("g")
+        .attr('class', 'tree-group')
         .attr("transform", d => `translate(${source.y0},${source.x0})`)
         .attr("fill-opacity", 0)
         .attr("stroke-opacity", 0)
@@ -182,6 +183,8 @@ class Home {
       d.x0 = d.x;
       d.y0 = d.y;
     });
+    this.search()
+
   }
   root.x0 = dy / 2;
   root.y0 = 0;
@@ -196,13 +199,82 @@ class Home {
   return this.svg.node();
   }
   rightClick(container) {
-    console.log(container)
     container.on('contextmenu',(e) => {
       e.preventDefault()
-      const menu = document.createElement('div')
-      menu.style.width = '70px'
-      menu.style.height = '80px'
+      const [x,y] = d3.pointer(e)
 
+      container.selectAll('.right-click-menu').remove()
+
+      const menuGroup = container.append('g').attr('class', 'right-click-menu').attr('transform', `translate(${x}, ${y})`)
+
+      menuGroup.append('rect')
+      .transition()
+      .attr('width', 160)
+      .attr('height', 2)
+      .duration(200)
+      .transition()
+      .duration(300)
+      .attr('width', 160)
+      .attr('height', 200)
+      .attr('fill', 'lightgrey')
+
+      const hovering_rect = menuGroup.append('rect')
+      .attr('class', 'highlight-rect')
+      .attr('width', 160)
+      .attr('height', 30)
+      .attr('x', 0)
+      .attr('y', 5)
+      .attr('fill', 'gold')
+      .attr('opacity', 0)
+
+      const deleteText  = menuGroup.append('text')
+      .attr('transform', `translate(${10}, ${ 20})`)
+      .text('Delete Node')
+      .attr('font-size', '14px')
+      .style('opacity', 0)
+      .style('pointer-events', 'all')
+      
+      deleteText.transition()
+      .delay(320)
+      .style('opacity', 1)
+   
+      hovering_rect.on('mouseover', (e) => {
+        hovering_rect.attr('opacity', 1)
+      })
+      deleteText.on('mouseover', () => {
+        hovering_rect.attr('opacity', 1)
+      })
+      
+      hovering_rect.on('mouseout', () => {
+        menuGroup.selectAll('.highlight-rect').attr('opacity', 0);
+      })
+      deleteText.on('mouseout', () => {
+        menuGroup.selectAll('.highlight-rect').attr('opacity', 0);
+      })
+      
+
+    })
+
+    this.svg.on('click', () => {
+      container.selectAll('.right-click-menu').remove()
+    })
+  }
+  search() {
+    d3.select('#searchField').on('change', (e) => {
+      const searchedText = e.target.value.toLowerCase()
+      d3.selectAll('.tree-group').each(function(d) {
+        console.log(d)
+        const nodeText = d.data.name.toLowerCase()
+        const selectedElementText = d3.select(this).select('text')
+        const selectedElementCircle = d3.select(this).select('circle')
+        selectedElementText.transition().attr('fill','#555').attr('font-size', 12)
+        selectedElementCircle.transition().attr('fill','#555').attr('r','2.5')
+
+        if(searchedText === nodeText) {
+          selectedElementText.transition().attr('fill','#0080FF').attr('font-size', 15)
+          selectedElementCircle.transition().attr('fill','#0080FF').attr('r','5')
+        }
+      })
     })
   }
   Debouncer(renderVisualization, slider, filterValue, filterPathByYear, filterNodesByYear, links, root) {
