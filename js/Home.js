@@ -13,8 +13,8 @@ class Home {
     this.frequenciesValues = null
     this.numberOfFiles = 0
     this.zoomGroups = new Map()
-    this.sliderValue = document.querySelector('.filter-slide')
-    this.filterValue = document.querySelector('.filter-value')
+    this.yearSliderValue = document.querySelector('.year-filter-slide')
+    this.yearFilterValue = document.querySelector('.year-filter-value')
     this.years = []
     this.filteredNodes = []
     this.update = null
@@ -113,7 +113,7 @@ class Home {
       for (let depth = 1; depth <= maxDepth; depth++) {
         const nodesAtDepth = nodes.filter(n => n.depth === depth);
         nodesAtDepth.forEach(node => {
-          if (node.data.year >= this.sliderValue.value && 
+          if (node.data.year >= this.yearSliderValue.value && 
               this.filteredNodes.includes(node.parent)) {
             this.filteredNodes.push(node);
           }
@@ -225,92 +225,150 @@ class Home {
           });
 
       root.eachBefore(d => {
-        d.x0 = d.x;
-        d.y0 = d.y;
+        d.x0 = d.x
+        d.y0 = d.y
       });
-      this.rightClick(container)
+      this.rightClick(root, container)
     }
-    root.x0 = dy / 2;
-    root.y0 = 0;
+    root.x0 = dy / 2
+    root.y0 = 0
     root.descendants().forEach((d, i) => {
       d.id = i;
-      d._children = d.children;
+      d._children = d.children
       if (d.depth) d.children = null;
     });
 
-    this.update(null, root);
-    this.filter(root) 
+    this.update(null, root)
+    this.filterByYear(root) 
 
 
     return this.svg.node();
   }
-  rightClick(container) {
-    container.on('contextmenu',(e) => {
-      e.preventDefault()
-      const [x,y] = d3.pointer(e)
-
+  rightClick(root, container) {
+    const self = this
+    
+    let currentNode = null
+    
+    d3.selectAll('.tree-group').on('contextmenu', function(event, d) {
+      event.preventDefault()
+      event.stopPropagation()
+    
+      currentNode = d
+      
+      const [x, y] = d3.pointer(event, container.node());
+      
       container.selectAll('.right-click-menu').remove()
-
+      
       const menuGroup = container.append('g')
-      .attr('class', 'right-click-menu')
-      .attr('transform', `translate(${x}, ${y})`)
-      .data(this.filteredNodes)
-
+        .attr('class', 'right-click-menu')
+        .attr('transform', `translate(${x}, ${y})`)
+      
       menuGroup.append('rect')
-      .transition()
-      .attr('width', 160)
-      .attr('height', 2)
-      .duration(200)
-      .transition()
-      .duration(300)
-      .attr('width', 160)
-      .attr('height', 200)
-      .attr('fill', 'lightgrey')
-
+        .transition()
+        .attr('width', 160)
+        .attr('height', 2)
+        .duration(200)
+        .transition()
+        .duration(300)
+        .attr('width', 160)
+        .attr('height', 50)
+        .attr('fill', 'lightgrey')
+        .attr('rx', 5)
+        .attr('ry', 5)
+      
       const hovering_rect = menuGroup.append('rect')
-      .attr('class', 'highlight-rect')
-      .attr('width', 160)
-      .attr('height', 30)
-      .attr('x', 0)
-      .attr('y', 5)
-      .attr('fill', 'gold')
-      .attr('opacity', 0)
-
-      const deleteText  = menuGroup.append('text')
-      .attr('transform', `translate(${10}, ${ 20})`)
-      .text('Delete Node')
-      .attr('font-size', '14px')
-      .style('opacity', 0)
-      .style('pointer-events', 'all')
-      .on('click', (e, d) => {
-        this.deleteNode(d)
-      })
+        .attr('class', 'highlight-rect')
+        .attr('width', 150)
+        .attr('height', 30)
+        .attr('x', 5)
+        .attr('y', 10)
+        .attr('fill', 'gold')
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .attr('opacity', 0);
+      
+      const deleteText = menuGroup.append('text')
+        .attr('transform', `translate(${15}, ${30})`)
+        .text('Delete Node')
+        .attr('font-size', '14px')
+        .style('opacity', 0)
+        .style('pointer-events', 'all')
+        .on('click', function() {
+          if (currentNode) {
+            self.showNotification(`Deleting node: ${currentNode.data.name}`);
+            self.deleteNode(currentNode);
+          }
+        });
       
       deleteText.transition()
-      .delay(320)
-      .style('opacity', 1)
-   
-      hovering_rect.on('mouseover', (e) => {
-        hovering_rect.attr('opacity', 1)
-      })
-      deleteText.on('mouseover', () => {
-        hovering_rect.attr('opacity', 1)
-      })
+        .delay(320)
+        .style('opacity', 1);
       
-      hovering_rect.on('mouseout', () => {
-        menuGroup.selectAll('.highlight-rect').attr('opacity', 0);
-      })
-      deleteText.on('mouseout', () => {
-        menuGroup.selectAll('.highlight-rect').attr('opacity', 0);
-      })
+      hovering_rect.on('mouseover', () => hovering_rect.attr('opacity', 0.7));
+      deleteText.on('mouseover', () => hovering_rect.attr('opacity', 0.7));
       
-
-    })
-
-    this.svg.on('click', () => {
-      container.selectAll('.right-click-menu').remove()
-    })
+      hovering_rect.on('mouseout', () => hovering_rect.attr('opacity', 0));
+      deleteText.on('mouseout', () => hovering_rect.attr('opacity', 0));
+    });
+    
+    container.on('click', () => {
+      container.selectAll('.right-click-menu').remove();
+    });
+    
+    this.svg.on('contextmenu', function(event) {
+      if (event.target.tagName === 'svg' || event.target.classList.contains('visualization-container')) {
+        container.selectAll('.right-click-menu').remove();
+      }
+    });
   }
+
+  deleteNode(selectedNode) {
+    
+    if (selectedNode.depth === 0) {
+      this.showNotification("Cannot delete root node");
+      return;
+    }
+    
+    const parent = selectedNode.parent;
+    
+    if (parent) {
+
+      if (parent.children) {
+        parent.children = parent.children.filter(child => child.id !== selectedNode.id);
+        
+        if (parent.children.length === 0) {
+          parent.children = null;
+        }
+      }
+      
+      if (parent._children) {
+        parent._children = parent._children.filter(child => child.id !== selectedNode.id);
+        
+        if (parent._children.length === 0) {
+          parent._children = null;
+        }
+      }
+      this.update(null, parent);
+      d3.selectAll('.right-click-menu').remove();
+    }
+  }
+
+  showNotification(message) {
+    const notification = d3.select('#notification');
+    notification.text(message)
+      .style('opacity', 1)
+      .style('top', '20px')
+      .attr('fill', 'crimson')
+
+    
+    setTimeout(() => {
+      notification.transition()
+        .duration(500)
+        .style('opacity', 0)
+        .style('top', '10px')
+    }, 2000);
+  }
+
   search() {
     d3.select('#searchField').on('input', (e) => {
       const searchedText = e.target.value.toLowerCase()
@@ -329,29 +387,18 @@ class Home {
     })
   }
 
-  filter(root) {
+  filterByYear(root) {
     setTimeout(() => {
-      this.sliderValue.min = Math.min(...this.years);
-      this.sliderValue.max = Math.max(...this.years);
-      this.sliderValue.value = Math.min(...this.years);
-      this.filterValue.textContent = this.sliderValue.value;
+      this.yearSliderValue.min = Math.min(...this.years);
+      this.yearSliderValue.max = Math.max(...this.years);
+      this.yearSliderValue.value = Math.min(...this.years);
+      this.yearFilterValue.textContent = this.yearSliderValue.value;
     }, 0);
-    d3.select('.filter-slide').on('input', (e) => {
-      this.filterValue.textContent = e.target.value;
+    d3.select('.year-filter-slide').on('input', (e) => {
+      this.yearFilterValue.textContent = e.target.value;
       this.update(null, root);
 
     })
-  }
-
-  deleteNode(selectedNode) {
-    // d3.selectAll('.tree-group').each((node) => {
-      // if(node === selectedNode)
-        // this.filteredNodes.pop()
-      // console.log(node)
-
-        // node.remove()
-    // })
-
   }
 }
 

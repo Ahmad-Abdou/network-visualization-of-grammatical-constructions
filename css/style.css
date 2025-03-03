@@ -87,40 +87,53 @@ path{
 .rect-tooltips{
   z-index: 10000;
 }
-.filter-container{
+.filters{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  
+}
+.year-filter-container, .frequency-filter-container{
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content:center;
   gap: 10px;
 }
 
-.filter-slide{
-  width: 65%;
-  
+.year-filter-slide, .frequecny-filter-slide{
+  width: 55%;
 }
-.reset-btn{
-  width: 15%;
-  background-color: var(--red);
-  color: white;
-  border: none;
-  padding: 5px;
-  box-shadow: 1px 1px 5px 1px black;
-  height: 30px;
-  margin-top: 10px;
-  font-family: var(--font-family);
-  font-size: 16px;
-}
-.filter-value{
+
+
+.year-filter-value, .frequency-filter-value{
   font-size: 20px;
   font-family: var(--font-family);
 }
-.year-filter{
+.year-filter, .frequency-filter{
   font-size: 18px;
   font-weight: 500;
   font-family: var(--font-family);
 }
+input[type='range']{ accent-color: var(--blue); }
+
 #searchField{
   padding: 15px;
   border: none;
   border-radius: 5px;
+  font-size: 15px;
+}
+
+#notification {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: crimson;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 5px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s, top 0.3s;
+  pointer-events: none;
 }
