@@ -163,8 +163,21 @@ class Home {
           .attr("stroke-opacity", 0)
           .on("click", (event, d) => {
             d.children = d.children ? null : d._children;
-            this.update(event, d);
-          });
+            this.update(event, d)
+          }).on('mouseover', (e) => {
+            d3.select(e.target).attr('r', 7).attr('fill', 'crimson').attr('opacity', '0.7').attr('transform', 'translate(2,0)')
+          }).on('mouseout', (e, d) => {
+            d3.selectAll('.tree-group').selectAll('circle')
+              .each(function(d) {
+                if (d3.select(this).attr('fill') === 'crimson') {
+                  d3.select(this)
+                    .attr("fill", d => d._children ? "#555" : "#999")
+                    .attr("r", d => d.depth === 0 ? 8 : 2.5)
+                    .attr('opacity', '1')
+                    .attr('transform', 'translate(0,0)');
+                }
+              })
+          })
 
       nodeEnter.append("circle")
           .attr("r", d => d.depth === 0 ? 8 : 2.5)
@@ -215,6 +228,7 @@ class Home {
         d.x0 = d.x;
         d.y0 = d.y;
       });
+      this.rightClick(container)
     }
     root.x0 = dy / 2;
     root.y0 = 0;
@@ -225,8 +239,8 @@ class Home {
     });
 
     this.update(null, root);
-    this.rightClick(container)
     this.filter(root) 
+
 
     return this.svg.node();
   }
@@ -237,7 +251,10 @@ class Home {
 
       container.selectAll('.right-click-menu').remove()
 
-      const menuGroup = container.append('g').attr('class', 'right-click-menu').attr('transform', `translate(${x}, ${y})`)
+      const menuGroup = container.append('g')
+      .attr('class', 'right-click-menu')
+      .attr('transform', `translate(${x}, ${y})`)
+      .data(this.filteredNodes)
 
       menuGroup.append('rect')
       .transition()
@@ -265,6 +282,9 @@ class Home {
       .attr('font-size', '14px')
       .style('opacity', 0)
       .style('pointer-events', 'all')
+      .on('click', (e, d) => {
+        this.deleteNode(d)
+      })
       
       deleteText.transition()
       .delay(320)
@@ -321,6 +341,17 @@ class Home {
       this.update(null, root);
 
     })
+  }
+
+  deleteNode(selectedNode) {
+    // d3.selectAll('.tree-group').each((node) => {
+      // if(node === selectedNode)
+        // this.filteredNodes.pop()
+      // console.log(node)
+
+        // node.remove()
+    // })
+
   }
 }
 
