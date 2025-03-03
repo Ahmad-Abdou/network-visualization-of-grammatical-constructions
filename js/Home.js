@@ -11,9 +11,14 @@ class Home {
     this.verbKeys = null
     this.timeValues = null
     this.frequenciesValues = null
-    this.sliderValue = null
     this.numberOfFiles = 0
     this.zoomGroups = new Map()
+    this.sliderValue = document.querySelector('.filter-slide')
+    this.filterValue = document.querySelector('.filter-value')
+    this.years = []
+    this.filteredNodes = []
+    this.update = null
+    this.search()
   }
   buildHierarchyFromCSV_5_Verbs(csvData, file) {
     let root = { name: file.slice(7, file.length - 4), children: [] };
@@ -49,8 +54,8 @@ class Home {
     this.collapsable(root)
   })
   }
-  collapsable(root) {
 
+  collapsable(root) {
   const dx = 15;
   const dy = (this.width - this.margin.right - this.margin.left) / (1 + root.height);
 
@@ -90,113 +95,140 @@ class Home {
 
     container.call(zoom)
 
-  const update = (event, source) =>  {
-    const nodes = root.descendants().reverse();
-    const links = root.links();
+    this.update = (event, source) =>  {
+      this.filteredNodes = []
+      this.years = []
+      const nodes = root.descendants();
+      
+      nodes.forEach(node => {
+        if (node.data.year !== undefined) {
+          this.years.push(node.data.year);
+        }
+      });
 
-    tree(root);
+      const rootNode = nodes.find(n => n.depth === 0);
+      this.filteredNodes.push(rootNode);
+      
+      const maxDepth = Math.max(...nodes.map(n => n.depth));
+      for (let depth = 1; depth <= maxDepth; depth++) {
+        const nodesAtDepth = nodes.filter(n => n.depth === depth);
+        nodesAtDepth.forEach(node => {
+          if (node.data.year >= this.sliderValue.value && 
+              this.filteredNodes.includes(node.parent)) {
+            this.filteredNodes.push(node);
+          }
+        });
+      }
 
-    let left = root;
-    let right = root;
-    let top = root;
-    let bottom = root;
-    const min_width = d3.select('.tree-container').style('width')
-    const min_height = d3.select('.tree-container').style('height')
+      const links = this.filteredNodes
+        .filter(d => d.parent && this.filteredNodes.includes(d.parent))
+        .map(d => ({ source: d.parent, target: d })); 
+      tree(root);
+      
+      let left = root;
+      let right = root;
+      let top = root;
+      let bottom = root;
+      const min_width = d3.select('.tree-container').style('width')
+      const min_height = d3.select('.tree-container').style('height')
 
-    root.eachBefore(node => {
-      if (node.x < left.x) left = node;
-      if (node.x > right.x) right = node;
+      root.eachBefore(node => {
+        if(node.data.year !== undefined) {
+          this.years.push(node.data.year)
+        }
+        if (node.x < left.x) left = node;
+        if (node.x > right.x) right = node;
+      });
+
+      const height = Math.max(right.x - left.x + this.margin.top + this.margin.bottom, min_height);
+      const width = Math.max(bottom.y - top.y + this.margin.left + this.margin.right, min_width);
+      const transition = container.transition()
+          .duration(750)
+          .attr("height", height)
+          .attr("viewBox", [
+            -this.margin.left,            
+            left.x - this.margin.top,
+            Math.max(width, min_width),
+            Math.max(height, min_height)
+        ])
+          .tween("resize", window.ResizeObserver ? null : () => () => this.svg.dispatch("toggle"));
+
+      const node = gNode.selectAll("g")
+        .data(this.filteredNodes, d => d.id);
+
+      const nodeEnter = node.enter().append("g")
+          .attr('class', 'tree-group')
+          .attr("transform", d => `translate(${source.y0},${source.x0})`)
+          .attr("fill-opacity", 0)
+          .attr("stroke-opacity", 0)
+          .on("click", (event, d) => {
+            d.children = d.children ? null : d._children;
+            this.update(event, d);
+          });
+
+      nodeEnter.append("circle")
+          .attr("r", d => d.depth === 0 ? 8 : 2.5)
+          .attr("fill", d => d._children ? "#555" : "#999")
+          .attr("stroke-width", 10);
+
+      nodeEnter.append("text")
+          .attr("dy", "0.31em")
+          .attr("x", d => d._children ? -6 : 6)
+          .attr("text-anchor", d => d._children ? "end" : "start")
+          .attr('font-size', d => d.depth === 0 ? '12px' : '10px')
+          .text(d => d.data.name)
+          .attr("stroke-linejoin", "round")
+          .attr("stroke-width", 3)
+          .attr("stroke", "white")
+          .attr("paint-order", "stroke")
+          .attr('transform',  d => d.depth === 0 ?'translate(-5, 0)': 'translate(0, 0)')
+
+      const nodeUpdate = node.merge(nodeEnter).transition(transition)
+          .attr("transform", d => `translate(${d.y},${d.x})`)
+          .attr("fill-opacity", 1)
+          .attr("stroke-opacity", 1);
+
+      const nodeExit = node.exit().transition(transition).remove()
+          .attr("transform", d => `translate(${source.y},${source.x})`)
+          .attr("fill-opacity", 0)
+          .attr("stroke-opacity", 0);
+
+      const link = gLink.selectAll("path")
+        .data(links, d => d.target.id);
+
+      const linkEnter = link.enter().append("path")
+          .attr("d", d => {
+            const o = {x: source.x0, y: source.y0};
+            return diagonal({source: o, target: o});
+          });
+
+      link.merge(linkEnter).transition(transition)
+          .attr("d", diagonal);
+
+      link.exit().transition(transition).remove()
+          .attr("d", d => {
+            const o = {x: source.x, y: source.y};
+            return diagonal({source: o, target: o});
+          });
+
+      root.eachBefore(d => {
+        d.x0 = d.x;
+        d.y0 = d.y;
+      });
+    }
+    root.x0 = dy / 2;
+    root.y0 = 0;
+    root.descendants().forEach((d, i) => {
+      d.id = i;
+      d._children = d.children;
+      if (d.depth) d.children = null;
     });
 
-    const height = Math.max(right.x - left.x + this.margin.top + this.margin.bottom, min_height);
-    const width = Math.max(bottom.y - top.y + this.margin.left + this.margin.right, min_width);
+    this.update(null, root);
+    this.rightClick(container)
+    this.filter(root) 
 
-    const transition = container.transition()
-        .duration(750)
-        .attr("height", height)
-        .attr("viewBox", [
-          -this.margin.left,            
-          left.x - this.margin.top,
-          Math.max(width, min_width),
-          Math.max(height, min_height)
-      ])
-        .tween("resize", window.ResizeObserver ? null : () => () => this.svg.dispatch("toggle"));
-
-    const node = gNode.selectAll("g")
-      .data(nodes, d => d.id);
-
-    const nodeEnter = node.enter().append("g")
-        .attr('class', 'tree-group')
-        .attr("transform", d => `translate(${source.y0},${source.x0})`)
-        .attr("fill-opacity", 0)
-        .attr("stroke-opacity", 0)
-        .on("click", (event, d) => {
-          d.children = d.children ? null : d._children;
-          update(event, d);
-        });
-
-    nodeEnter.append("circle")
-        .attr("r", d => d.depth === 0 ? 5 : 2.5)
-        .attr("fill", d => d._children ? "#555" : "#999")
-        .attr("stroke-width", 10);
-
-    nodeEnter.append("text")
-        .attr("dy", "0.31em")
-        .attr("x", d => d._children ? -6 : 6)
-        .attr("text-anchor", d => d._children ? "end" : "start")
-        .attr('font-size', d => d.depth === 0 ? '12px' : '10px')
-        .text(d => d.data.name)
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-width", 3)
-        .attr("stroke", "white")
-        .attr("paint-order", "stroke");
-
-    const nodeUpdate = node.merge(nodeEnter).transition(transition)
-        .attr("transform", d => `translate(${d.y},${d.x})`)
-        .attr("fill-opacity", 1)
-        .attr("stroke-opacity", 1);
-
-    const nodeExit = node.exit().transition(transition).remove()
-        .attr("transform", d => `translate(${source.y},${source.x})`)
-        .attr("fill-opacity", 0)
-        .attr("stroke-opacity", 0);
-
-    const link = gLink.selectAll("path")
-      .data(links, d => d.target.id);
-
-    const linkEnter = link.enter().append("path")
-        .attr("d", d => {
-          const o = {x: source.x0, y: source.y0};
-          return diagonal({source: o, target: o});
-        });
-
-    link.merge(linkEnter).transition(transition)
-        .attr("d", diagonal);
-
-    link.exit().transition(transition).remove()
-        .attr("d", d => {
-          const o = {x: source.x, y: source.y};
-          return diagonal({source: o, target: o});
-        });
-
-    root.eachBefore(d => {
-      d.x0 = d.x;
-      d.y0 = d.y;
-    });
-    this.search()
-
-  }
-  root.x0 = dy / 2;
-  root.y0 = 0;
-  root.descendants().forEach((d, i) => {
-    d.id = i;
-    d._children = d.children;
-    if (d.depth && d.data.name.length !== 7) d.children = null;
-  });
-
-  update(null, root);
-  this.rightClick(container)
-  return this.svg.node();
+    return this.svg.node();
   }
   rightClick(container) {
     container.on('contextmenu',(e) => {
@@ -260,59 +292,35 @@ class Home {
     })
   }
   search() {
-    d3.select('#searchField').on('change', (e) => {
+    d3.select('#searchField').on('input', (e) => {
       const searchedText = e.target.value.toLowerCase()
       d3.selectAll('.tree-group').each(function(d) {
-        console.log(d)
         const nodeText = d.data.name.toLowerCase()
         const selectedElementText = d3.select(this).select('text')
         const selectedElementCircle = d3.select(this).select('circle')
-        selectedElementText.transition().attr('fill','#555').attr('font-size', 12)
-        selectedElementCircle.transition().attr('fill','#555').attr('r','2.5')
+        selectedElementText.transition().attr('fill',d => d._children ? "#555" : "#999").attr('font-size', d => d.depth === 0 ? '12px' : '10px')
+        selectedElementCircle.transition().attr('fill',d => d._children ? "#555" : "#999").attr('r',d => d.depth === 0 ? 8 : 2.5)
 
         if(searchedText === nodeText) {
-          selectedElementText.transition().attr('fill','#0080FF').attr('font-size', 15)
-          selectedElementCircle.transition().attr('fill','#0080FF').attr('r','5')
+          selectedElementText.transition().duration(1250).attr('fill','#0080FF').attr('font-size', '18px').attr('transform',  d => d._children  ?'translate(-5, 0)': 'translate(5, 0)')
+          selectedElementCircle.transition().duration(1250).attr('fill','#0080FF').attr('r','8')
         }
       })
     })
   }
-  Debouncer(renderVisualization, slider, filterValue, filterPathByYear, filterNodesByYear, links, root) {
-    function debounce(func, wait) {
-      let timeout;
-      return function executedFunction(...args) {
-          const later = () => {
-              clearTimeout(timeout);
-              func(...args);
-          };
-          clearTimeout(timeout);
-          timeout = setTimeout(later, wait);
-      };
-  }
 
-  const debouncedRender = debounce((pathData, nodeData) => {
-      renderVisualization(pathData, nodeData);
-  }, 100);
+  filter(root) {
+    setTimeout(() => {
+      this.sliderValue.min = Math.min(...this.years);
+      this.sliderValue.max = Math.max(...this.years);
+      this.sliderValue.value = Math.min(...this.years);
+      this.filterValue.textContent = this.sliderValue.value;
+    }, 0);
+    d3.select('.filter-slide').on('input', (e) => {
+      this.filterValue.textContent = e.target.value;
+      this.update(null, root);
 
-  slider.addEventListener('input', (e) => {
-      this.sliderValue = e.target.value;
-      filterValue.textContent = e.target.value;
-      
-      filterPathByYear = links.filter(
-          link => Number(link.target.data.year) >= Number(this.sliderValue)
-      );
-      filterNodesByYear = root.descendants().filter(
-          row => Number(row.data.year) >= Number(this.sliderValue)
-      );
-      debouncedRender(filterPathByYear, filterNodesByYear);
-  });
-
-  const resetBtn = document.querySelector('.reset-btn') || createResetButton();
-  resetBtn.addEventListener('click', () => {
-      slider.value = timeScale[0]
-      filterValue.textContent = timeScale[0];
-      renderVisualization(links, root.descendants());
-  });
+    })
   }
 }
 
