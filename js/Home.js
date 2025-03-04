@@ -15,10 +15,15 @@ class Home {
     this.zoomGroups = new Map()
     this.yearSliderValue = document.querySelector('.year-filter-slide')
     this.yearFilterValue = document.querySelector('.year-filter-value')
-    this.years = []
+    this.years = new Set()
+    this.frequencySliderValue = document.querySelector('.frequency-filter-slide')
+    this.frequencyFilterValue = document.querySelector('.frequency-filter-value')
+    this.frequencies = new Set()
     this.filteredNodes = []
     this.update = null
     this.search()
+    this.yearIsChanged = false
+    this.frequencyIsChanged = false
   }
   buildHierarchyFromCSV_5_Verbs(csvData, file) {
     let root = { name: file.slice(7, file.length - 4), children: [] };
@@ -97,15 +102,7 @@ class Home {
 
     this.update = (event, source) =>  {
       this.filteredNodes = []
-      this.years = []
       const nodes = root.descendants();
-      
-      nodes.forEach(node => {
-        if (node.data.year !== undefined) {
-          this.years.push(node.data.year);
-        }
-      });
-
       const rootNode = nodes.find(n => n.depth === 0);
       this.filteredNodes.push(rootNode);
       
@@ -113,10 +110,18 @@ class Home {
       for (let depth = 1; depth <= maxDepth; depth++) {
         const nodesAtDepth = nodes.filter(n => n.depth === depth);
         nodesAtDepth.forEach(node => {
-          if (node.data.year >= this.yearSliderValue.value && 
+          if(this.yearIsChanged) {
+            if (node.data.year >= this.yearSliderValue.value && 
               this.filteredNodes.includes(node.parent)) {
             this.filteredNodes.push(node);
           }
+        }
+        else if (this.frequencyIsChanged) {
+          if (node.data.frequency >= this.frequencySliderValue.value && 
+            this.filteredNodes.includes(node.parent)) {
+          this.filteredNodes.push(node);
+        }
+      }
         });
       }
 
@@ -131,11 +136,39 @@ class Home {
       let bottom = root;
       const min_width = d3.select('.tree-container').style('width')
       const min_height = d3.select('.tree-container').style('height')
-
+      let yearOldSizeSet = 0
+      let frequencyOldSizeSet = 0
       root.eachBefore(node => {
-        if(node.data.year !== undefined) {
-          this.years.push(node.data.year)
-        }
+        if (node._children) {
+          yearOldSizeSet = this.years.size
+          frequencyOldSizeSet = this.frequencies.size
+
+          node._children.forEach(child => {
+            if(!this.years.has(child.data.year)){
+              this.years.add(child.data.year);
+            }
+            if(!this.frequencies.has(child.data.frequency)){
+              this.frequencies.add(child.data.frequency);
+            }
+          })
+          if( this.years.size >  yearOldSizeSet) {
+            this.yearSliderValue.min = Math.min(...this.years);
+            this.yearSliderValue.max = Math.max(...this.years);
+            this.yearSliderValue.value = Math.min(...this.years);
+            this.yearFilterValue.textContent = this.yearSliderValue.value ;
+            this.yearIsChanged = true
+            this.frequencyIsChanged = false
+          }
+          if( this.frequencies.size >  frequencyOldSizeSet) {
+            this.frequencySliderValue.min = Math.min(...this.frequencies);
+            this.frequencySliderValue.max = Math.max(...this.frequencies);
+            this.frequencySliderValue.value = Math.min(...this.frequencies);
+            this.frequencyFilterValue.textContent = this.frequencySliderValue.value;
+            this.yearIsChanged = false
+            this.frequencyIsChanged = true
+          }
+          
+      }
         if (node.x < left.x) left = node;
         if (node.x > right.x) right = node;
       });
@@ -240,7 +273,7 @@ class Home {
 
     this.update(null, root)
     this.filterByYear(root) 
-
+    this.filterByFrequency(root)
 
     return this.svg.node();
   }
@@ -388,14 +421,26 @@ class Home {
   }
 
   filterByYear(root) {
-    setTimeout(() => {
-      this.yearSliderValue.min = Math.min(...this.years);
-      this.yearSliderValue.max = Math.max(...this.years);
-      this.yearSliderValue.value = Math.min(...this.years);
-      this.yearFilterValue.textContent = this.yearSliderValue.value;
-    }, 0);
     d3.select('.year-filter-slide').on('input', (e) => {
       this.yearFilterValue.textContent = e.target.value;
+      this.yearIsChanged = true
+      this.frequencyIsChanged = false
+      this.update(null, root);
+
+    })
+  }
+  filterByFrequency(root) {
+    // console.log(this.frequencies)
+    // setTimeout(() => {
+    //   this.frequencySliderValue.min = Math.min(...this.frequencies);
+    //   this.frequencySliderValue.max = Math.max(...this.frequencies);
+    //   this.frequencySliderValue.value = Math.min(...this.frequencies);
+    //   this.frequencyFilterValue.textContent = this.frequencySliderValue.value;
+    // }, 0);
+    d3.select('.frequency-filter-slide').on('input', (e) => {
+      this.frequencyFilterValue.textContent = e.target.value;
+      this.frequencyIsChanged = true
+      this.yearIsChanged = false
       this.update(null, root);
 
     })

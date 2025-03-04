@@ -95,24 +95,28 @@ path{
 }
 .year-filter-container, .frequency-filter-container{
   display: flex;
-  flex-wrap: wrap;
-  justify-content:center;
   gap: 10px;
 }
 
-.year-filter-slide, .frequecny-filter-slide{
-  width: 55%;
+.year-filter-slide, .frequency-filter-slide{
+  flex: 2;
 }
 
 
 .year-filter-value, .frequency-filter-value{
   font-size: 20px;
   font-family: var(--font-family);
+  flex: 1;
+  display: flex;
+  justify-content: center;
 }
 .year-filter, .frequency-filter{
   font-size: 18px;
   font-weight: 500;
   font-family: var(--font-family);
+  flex: 1;
+  display: flex;
+  justify-content: center;
 }
 input[type='range']{ accent-color: var(--blue); }
 
