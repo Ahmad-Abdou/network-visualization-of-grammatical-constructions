@@ -26,6 +26,7 @@ class Home {
     this.search()
     this.yearIsChanged = false
     this.frequencyIsChanged = false
+    this.treeInstances = []
   }
   buildHierarchyFromCSV_5_Verbs(csvData, file) {
     let root = { name: file.slice(7, file.length - 4), children: [] };
@@ -54,14 +55,23 @@ class Home {
   }
   buildHirearchy(file) {
     d3.csv(file).then((csvData) => {
-    const nestedData = this.buildHierarchyFromCSV_5_Verbs(csvData, file);
-    this.numberOfFiles++
-    const root = d3.hierarchy(nestedData)
-    this.collapsable(root)
-  })
+      const nestedData = this.buildHierarchyFromCSV_5_Verbs(csvData, file);
+      this.numberOfFiles++;
+      const root = d3.hierarchy(nestedData);
+      
+      const treeInstance = {
+        id: this.numberOfFiles,
+        root: root,
+        container: null,
+        update: null
+      };
+      
+      this.treeInstances.push(treeInstance);
+      this.collapsable(root, treeInstance);
+    });
   }
 
-  collapsable(root) {
+  collapsable(root, treeInstance) {
     console.log(this.minYearFilterValue)
     console.log(this.maxYearFilterValue)
 
@@ -72,12 +82,15 @@ class Home {
   const diagonal = d3.linkHorizontal().x(d => d.y).y(d => d.x);
 
   const container = this.svg.append('g')
-      .attr('class', `visualization-container-${this.numberOfFiles}`);
+      .attr('class', `visualization-container-${treeInstance.id}`)
+      .attr('id', `visualization-container-${treeInstance.id}`);
+    
+    treeInstance.container = container;
 
     container
       .attr("viewBox", [-this.margin.left, -this.margin.top, this.width, this.height])
       .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif; user-select: none;")
-      .attr('transform', 'translate(50, 100)')
+      .attr('transform', 'translate(60, 100)')
 
   const gLink = container.append("g")
       .attr("fill", "none")
@@ -104,8 +117,8 @@ class Home {
 
     container.call(zoom)
 
-    this.update = (event, source) =>  {
-      this.filteredNodes = []
+    const updateFunction = (event, source) => {
+      this.filteredNodes = [];
       const nodes = root.descendants();
       const rootNode = nodes.find(n => n.depth === 0);
       this.filteredNodes.push(rootNode);
@@ -201,17 +214,17 @@ class Home {
         ])
           .tween("resize", window.ResizeObserver ? null : () => () => this.svg.dispatch("toggle"));
 
-      const node = gNode.selectAll("g")
-        .data(this.filteredNodes, d => d.id);
+      const node = gNode.selectAll("g.tree-group")
+        .data(this.filteredNodes, d => d.id)
 
       const nodeEnter = node.enter().append("g")
-          .attr('class', 'tree-group')
+          .attr('class', `tree-group tree-group-${treeInstance.id}`)
           .attr("transform", d => `translate(${source.y0},${source.x0})`)
           .attr("fill-opacity", 0)
           .attr("stroke-opacity", 0)
           .on("click", (event, d) => {
             d.children = d.children ? null : d._children;
-            this.update(event, d)
+            updateFunction(event, d)
           }).on('mouseover', (e) => {
             d3.select(e.target).attr('r', 7).attr('fill', 'crimson').attr('opacity', '0.7').attr('transform', 'translate(2,0)')
           }).on('mouseout', (e, d) => {
@@ -276,28 +289,32 @@ class Home {
         d.x0 = d.x
         d.y0 = d.y
       });
-      this.rightClick(root, container)
-    }
+      this.rightClick(container, treeInstance)
+    };
+    
+    treeInstance.update = updateFunction
+    this.update = updateFunction
+
     root.x0 = dy / 2
     root.y0 = 0
     root.descendants().forEach((d, i) => {
-      d.id = i;
+      d.id = i
       d._children = d.children
-      if (d.depth) d.children = null;
+      if (d.depth) d.children = null
     });
 
-    this.update(null, root)
-    this.filterByYear(root) 
-    this.filterByFrequency(root)
+    updateFunction(null, root)
+    this.filterByYear(root, treeInstance)
+    this.filterByFrequency(root, treeInstance)
 
-    return this.svg.node();
+    return this.svg.node()
   }
-  rightClick(root, container) {
+  rightClick(container, treeInstance) {
     const self = this
     
     let currentNode = null
     
-    d3.selectAll('.tree-group').on('contextmenu', function(event, d) {
+    d3.selectAll(`.tree-group-${treeInstance.id}`).on('contextmenu', function(event, d) {
       event.preventDefault()
       event.stopPropagation()
     
@@ -344,7 +361,7 @@ class Home {
         .on('click', function() {
           if (currentNode) {
             self.showNotification(`Deleting node: ${currentNode.data.name}`);
-            self.deleteNode(currentNode);
+            self.deleteNode(currentNode, treeInstance);
           }
         });
       
@@ -370,7 +387,7 @@ class Home {
     });
   }
 
-  deleteNode(selectedNode) {
+  deleteNode(selectedNode, treeInstance) {
     
     if (selectedNode.depth === 0) {
       this.showNotification("Cannot delete root node");
@@ -396,8 +413,8 @@ class Home {
           parent._children = null;
         }
       }
-      this.update(null, parent);
-      d3.selectAll('.right-click-menu').remove();
+      treeInstance.update(null, parent);
+      treeInstance.container.selectAll('.right-click-menu').remove();
     }
   }
 
@@ -435,30 +452,29 @@ class Home {
     })
   }
 
-  filterByYear(root) {
-    d3.select('.min-year-filter-slide').on('input', (e) => {
+  filterByYear(root, treeInstance) {
+    d3.select('.min-year-filter-slide').on(`input.tree-${treeInstance.id}`, (e) => {
       this.minYearFilterValue.textContent = e.target.value;
-      this.yearIsChanged = true
-      this.frequencyIsChanged = false
-      this.update(null, root);
-
-    })
-    d3.select('.max-year-filter-slide').on('input', (e) => {
+      this.yearIsChanged = true;
+      this.frequencyIsChanged = false;
+      treeInstance.update(null, root);
+    });
+    
+    d3.select('.max-year-filter-slide').on(`input.tree-${treeInstance.id}`, (e) => {
       this.maxYearFilterValue.textContent = e.target.value;
-      this.yearIsChanged = true
-      this.frequencyIsChanged = false
-      this.update(null, root);
-
-    })
+      this.yearIsChanged = true;
+      this.frequencyIsChanged = false;
+      treeInstance.update(null, root);
+    });
   }
-  filterByFrequency(root) {
-    d3.select('.frequency-filter-slide').on('input', (e) => {
+  
+  filterByFrequency(root, treeInstance) {
+    d3.select('.frequency-filter-slide').on(`input.tree-${treeInstance.id}`, (e) => {
       this.frequencyFilterValue.textContent = e.target.value;
-      this.frequencyIsChanged = true
-      this.yearIsChanged = false
-      this.update(null, root);
-
-    })
+      this.frequencyIsChanged = true;
+      this.yearIsChanged = false;
+      treeInstance.update(null, root);
+    });
   }
 }
 
