@@ -13,8 +13,10 @@ class Home {
     this.frequenciesValues = null
     this.numberOfFiles = 0
     this.zoomGroups = new Map()
-    this.yearSliderValue = document.querySelector('.year-filter-slide')
-    this.yearFilterValue = document.querySelector('.year-filter-value')
+    this.minYearSliderValue = document.getElementById('min-year-slider')
+    this.maxYearSliderValue = document.getElementById('max-year-slider')
+    this.minYearFilterValue = document.querySelector('.min-year-filter-value')
+    this.maxYearFilterValue = document.querySelector('.max-year-filter-value')
     this.years = new Set()
     this.frequencySliderValue = document.querySelector('.frequency-filter-slide')
     this.frequencyFilterValue = document.querySelector('.frequency-filter-value')
@@ -52,7 +54,6 @@ class Home {
   }
   buildHirearchy(file) {
     d3.csv(file).then((csvData) => {
-    const treeLayout = d3.tree().size([this.innerHeight, this.innerWidth])
     const nestedData = this.buildHierarchyFromCSV_5_Verbs(csvData, file);
     this.numberOfFiles++
     const root = d3.hierarchy(nestedData)
@@ -61,6 +62,9 @@ class Home {
   }
 
   collapsable(root) {
+    console.log(this.minYearFilterValue)
+    console.log(this.maxYearFilterValue)
+
   const dx = 15;
   const dy = (this.width - this.margin.right - this.margin.left) / (1 + root.height);
 
@@ -111,8 +115,9 @@ class Home {
         const nodesAtDepth = nodes.filter(n => n.depth === depth);
         nodesAtDepth.forEach(node => {
           if(this.yearIsChanged) {
-            if (node.data.year >= this.yearSliderValue.value && 
+            if (node.data.year >= this.minYearSliderValue.value && node.data.year <= this.maxYearSliderValue.value &&
               this.filteredNodes.includes(node.parent)) {
+                console.log('TRUEEEEEEE')
             this.filteredNodes.push(node);
           }
         }
@@ -152,12 +157,22 @@ class Home {
             }
           })
           if( this.years.size >  yearOldSizeSet) {
-            this.yearSliderValue.min = Math.min(...this.years);
-            this.yearSliderValue.max = Math.max(...this.years);
-            this.yearSliderValue.value = Math.min(...this.years);
-            this.yearFilterValue.textContent = this.yearSliderValue.value ;
-            this.yearIsChanged = true
-            this.frequencyIsChanged = false
+            const minYear = Math.min(...this.years);
+            const maxYear = Math.max(...this.years);
+            
+            this.minYearSliderValue.min = minYear;
+            this.minYearSliderValue.max = maxYear;
+            this.maxYearSliderValue.min = minYear;
+            this.maxYearSliderValue.max = maxYear;
+            
+            this.minYearSliderValue.value = minYear;
+            this.maxYearSliderValue.value = maxYear;
+            
+            this.minYearFilterValue.textContent = minYear;
+            this.maxYearFilterValue.textContent = maxYear;
+        
+            this.yearIsChanged = true;
+            this.frequencyIsChanged = false;
           }
           if( this.frequencies.size >  frequencyOldSizeSet) {
             this.frequencySliderValue.min = Math.min(...this.frequencies);
@@ -421,8 +436,15 @@ class Home {
   }
 
   filterByYear(root) {
-    d3.select('.year-filter-slide').on('input', (e) => {
-      this.yearFilterValue.textContent = e.target.value;
+    d3.select('.min-year-filter-slide').on('input', (e) => {
+      this.minYearFilterValue.textContent = e.target.value;
+      this.yearIsChanged = true
+      this.frequencyIsChanged = false
+      this.update(null, root);
+
+    })
+    d3.select('.max-year-filter-slide').on('input', (e) => {
+      this.maxYearFilterValue.textContent = e.target.value;
       this.yearIsChanged = true
       this.frequencyIsChanged = false
       this.update(null, root);
@@ -430,13 +452,6 @@ class Home {
     })
   }
   filterByFrequency(root) {
-    // console.log(this.frequencies)
-    // setTimeout(() => {
-    //   this.frequencySliderValue.min = Math.min(...this.frequencies);
-    //   this.frequencySliderValue.max = Math.max(...this.frequencies);
-    //   this.frequencySliderValue.value = Math.min(...this.frequencies);
-    //   this.frequencyFilterValue.textContent = this.frequencySliderValue.value;
-    // }, 0);
     d3.select('.frequency-filter-slide').on('input', (e) => {
       this.frequencyFilterValue.textContent = e.target.value;
       this.frequencyIsChanged = true
