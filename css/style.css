@@ -142,13 +142,12 @@ path{
   position: relative;
   bottom: 5px;
   pointer-events: all;
-  width: 5px;
+  width: 8px;
   height: 20px;
   border-radius: 20%;
   -webkit-appearance: none;
   background: var(--blue);
   cursor: pointer;
-  box-shadow: 1px 1px 4px 1px black;
 }
 
 .double-slider input[type="range"]::-webkit-slider-runnable-track {
@@ -187,4 +186,40 @@ input[type='range']{
   opacity: 0;
   transition: opacity 0.3s, top 0.3s;
   pointer-events: none;
+}
+
+.timeline-animation-container{
+  display: flex;
+  gap: 10px;
+}
+#timeSlider{
+  flex: 8;
+}
+#playButton{
+  border: none;
+  padding: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  box-shadow: 1px 1px 3px 1px black;
+}
+
+#playButton:hover{
+  cursor: pointer;
+  transform: scale(1.1);
+}
+
+.stop{
+  width: 0;
+  height: 0;
+  margin-left: 2px;
+  border-top: 8px solid transparent;
+  border-left: 16px solid rgb(0, 133, 11);
+  border-bottom: 8px solid transparent;
+}
+.run{
+  width: 6px;
+  height: 15px;
+  border-right: 5px solid rgb(0, 133, 11);
+  border-left: 5px solid rgb(0, 133, 11);
 }

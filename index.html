@@ -26,17 +26,21 @@
             <input title="min year" type="range" name="min-year" id="min-year-slider" class="min-year-filter-slide">
             <input title="max year" type="range" name="max-year" id="max-year-slider" class="max-year-filter-slide">
         </div>
-      <div class="year-filter-value">
-        <p class="min-year-filter-value"></p>
-        <p>-</p>
-        <p class="max-year-filter-value"></p>
+        <div class="year-filter-value">
+          <p class="min-year-filter-value"></p>
+          <p>-</p>
+          <p class="max-year-filter-value"></p>
+        </div>
       </div>
-    </div>
       <div class="frequency-filter-container">
         <p class="frequency-filter">Frequency</p>
         <input title="frequency" type="range" name="slider" id="frequency-slider" class="frequency-filter-slide">
         <p class="frequency-filter-value">-</p>
       </div>
+    </div>
+    <div class="timeline-animation-container">
+      <button id="playButton" title="playBack"> <div id="shape" class="stop"></div></button>
+      <input type="range" id="timeSlider" min="0" max="100" value="0">
     </div>
   </div>
 </div>
@@ -47,6 +51,7 @@
   <script src="./js/notification.js"></script>
   <script src="./js/search.js"></script>
   <script src="./js/rightClick.js"></script>
+  <script src="./js/timeLine.js"></script>
   <script src="./js/main.js"></script>
 
 </body>
