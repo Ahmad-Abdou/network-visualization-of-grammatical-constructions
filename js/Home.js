@@ -243,7 +243,6 @@ class Home {
     filterByYear(root, treeInstance)
     filterByFrequency(root, treeInstance)
     search()
-
     return this.svg.node()
   }
 }

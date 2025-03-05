@@ -73,6 +73,9 @@ const rightClick = (container, treeInstance) => {
       container.selectAll('.right-click-menu').remove();
     }
   });
+  home.svg.on('click', () => {
+    container.selectAll('.right-click-menu').remove();
+  })
 }
 
 const deleteNode = (selectedNode, treeInstance) => {

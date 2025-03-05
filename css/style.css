@@ -3,7 +3,15 @@
   --grey: lightgray;
   --red: crimson;
   --med-size: 18px;
-  --font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif
+  --font-family: "Big Shoulders", sans-serif;
+
+}
+* {
+
+  font-family: var(--font-family);
+  font-optical-sizing:auto;
+  font-style: normal;
+  letter-spacing: 1px;
 }
 body{
   background-color: var(--grey);
@@ -24,7 +32,7 @@ body{
   border: 1px solid var(--grey);
   overflow-y:auto;
   overflow-x: hidden;
-  background-color: white;
+  background-color: rgb(255, 255, 255);
   border-right: 3px solid rgba(71, 71, 71, 0.781);
   padding: 5px;
 }
@@ -108,15 +116,16 @@ path{
   flex: 2;
   display: flex;
   justify-content: space-evenly;
+  
 }
 .min-year-filter-value, .max-year-filter-value{
   font-size: 18px;
-  font-family: var(--font-family);
+  
 }
 .year-filter, .frequency-filter{
   font-size: 18px;
   font-weight: 500;
-  font-family: var(--font-family);
+  
   flex: 1;
   display: flex;
   justify-content: center;
@@ -165,12 +174,42 @@ path{
 input[type='range']{
    accent-color: var(--blue)
    }
+.search-word-color, .search-year-color, .search-frequency-color{
+  border-radius: 10px;
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+  z-index: 1000;
+  display: flex;
+}
 
-#searchField{
+#word-color, #year-color , #frequency-color{
+  position: absolute;
+  right: 10px;
+  height: 49px;
+  width: 30px;
+  border: none;
+  border-radius: 10px;
+  outline: none;
+  visibility: hidden;
+  cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+}
+
+#searchWord, #searchYear, #searchFrequency{
   padding: 15px;
   border: none;
   border-radius: 5px;
   font-size: 15px;
+  width: 100%;
+  outline: none;
 }
 
 #notification {
@@ -186,12 +225,19 @@ input[type='range']{
   opacity: 0;
   transition: opacity 0.3s, top 0.3s;
   pointer-events: none;
+  
 }
 
 .timeline-animation-container{
   display: flex;
+  flex-direction: column;
   gap: 10px;
 }
+.timeline-animation{
+  display: flex;
+  gap: 10px;
+}
+
 #timeSlider{
   flex: 8;
 }
@@ -203,7 +249,16 @@ input[type='range']{
   border-radius: 10px;
   box-shadow: 1px 1px 3px 1px black;
 }
-
+#animation-type{
+  width: 100%;
+  border: none;
+  align-self:flex-end;
+  padding: 5px;
+  outline: none;
+  border-radius: 5px;
+  font-size: 15px;
+  
+}
 #playButton:hover{
   cursor: pointer;
   transform: scale(1.1);

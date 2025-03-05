@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders:opsz,wght@10..72,100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./css/style.css">
   <title>network</title>
 </head>
@@ -17,8 +20,27 @@
       <input class="file-input"  type="file" title="file" name="fileUpload">
     </label>
 
-    <label for="searchField"></label>
-    <input id="searchField" name="searchField" type="text" placeholder="Search for a word">
+    <div class="search-word-color">
+      <label for="searchWord"></label>
+      <input id="searchWord" name="searchWord" type="text" placeholder="Search for a word">
+      <label for="wordcolor"></label>
+      <input id="word-color"  type="color">
+    </div>
+    
+    <div class="search-year-color">
+      <label for="searchYear"></label>
+      <input id="searchYear" name="searchYear" type="number" placeholder="Search for a year">
+      <label for="yearcolor"></label>
+      <input id="year-color"  type="color">
+  </div>
+
+  <div class="search-frequency-color">
+    <label for="searchFrequency"></label>
+    <input id="searchFrequency" name="searchFrequency" type="number" placeholder="Search for a frequency">
+    <label for="frequency"></label>
+    <input id="frequency-color"  type="color">
+  </div>
+
     <div class="filters">
       <div class="year-filter-container">
         <p class="year-filter">Year</p>
@@ -39,8 +61,14 @@
       </div>
     </div>
     <div class="timeline-animation-container">
-      <button id="playButton" title="playBack"> <div id="shape" class="stop"></div></button>
-      <input type="range" id="timeSlider" min="0" max="100" value="0">
+      <select name="animation-type" id="animation-type">
+        <option selected disabled>Animation</option>
+        <option value="Spread">Spread</option>
+      </select>
+      <div class="timeline-animation">
+        <button id="playButton" title="playBack"> <div id="shape" class="stop"></div></button>
+        <input type="range" id="timeSlider" min="0" max="100" value="0">
+      </div>
     </div>
   </div>
 </div>
