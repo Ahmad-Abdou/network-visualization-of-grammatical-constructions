@@ -4,77 +4,14 @@ class Home {
     this.width = width
     this.height = height
     this.margin = {top:50, right : 50, bottom: 50, left: 50}
-    this.innerWidth = this.width - this.margin.left - this.margin.right
-    this.innerHeight = this.height - this.margin.top - this.margin.bottom
     this.svg = d3.select('.tree-container').append('svg').attr('width', this.width).attr('height', this.height)
-    this.g = this.svg.append('g').attr('transform', `translate(${this.margin.left}, ${this.margin.top})`)
-    this.verbKeys = null
-    this.timeValues = null
-    this.frequenciesValues = null
-    this.numberOfFiles = 0
     this.zoomGroups = new Map()
-    this.minYearSliderValue = document.getElementById('min-year-slider')
-    this.maxYearSliderValue = document.getElementById('max-year-slider')
-    this.minYearFilterValue = document.querySelector('.min-year-filter-value')
-    this.maxYearFilterValue = document.querySelector('.max-year-filter-value')
-    this.years = new Set()
-    this.frequencySliderValue = document.querySelector('.frequency-filter-slide')
-    this.frequencyFilterValue = document.querySelector('.frequency-filter-value')
-    this.frequencies = new Set()
     this.filteredNodes = []
     this.update = null
-    this.search()
-    this.yearIsChanged = false
-    this.frequencyIsChanged = false
-    this.treeInstances = []
   }
-  buildHierarchyFromCSV_5_Verbs(csvData, file) {
-    let root = { name: file.slice(7, file.length - 4), children: [] };
-    csvData.forEach(row => {
-      const columns = Object.keys(row)
-      let current = root;
-      columns.forEach(verbKey => {
-        if(verbKey.startsWith('year')) {
-          this.timeValues = row[verbKey]
-        } else if(verbKey.startsWith('frequency')) {
-          this.frequenciesValues = row[verbKey]
-        } else if(verbKey.startsWith('verb')) {
-          const verbValue = row[verbKey];
-          if (verbValue) {
-            let child = current.children.find(c => c.name === verbValue);
-            if (!child) {
-              child = { name: verbValue, year:row['year'], frequency : row['frequency'], children: [] };
-              current.children.push(child);
-            }
-            current = child;
-          }
-        }
-      });
-    });
-    return root;
-  }
-  buildHirearchy(file) {
-    d3.csv(file).then((csvData) => {
-      const nestedData = this.buildHierarchyFromCSV_5_Verbs(csvData, file);
-      this.numberOfFiles++;
-      const root = d3.hierarchy(nestedData);
-      
-      const treeInstance = {
-        id: this.numberOfFiles,
-        root: root,
-        container: null,
-        update: null
-      };
-      
-      this.treeInstances.push(treeInstance);
-      this.collapsable(root, treeInstance);
-    });
-  }
+
 
   collapsable(root, treeInstance) {
-    console.log(this.minYearFilterValue)
-    console.log(this.maxYearFilterValue)
-
   const dx = 15;
   const dy = (this.width - this.margin.right - this.margin.left) / (1 + root.height);
 
@@ -103,7 +40,7 @@ class Home {
       .attr("pointer-events", "all");
 
     const zoomG = container.append('g')
-    .attr('id',`zoom-group-${this.numberOfFiles}`)
+    .attr('id',`zoom-group-${numberOfFiles}`)
     .attr('class',`zoom-group`)
 
     zoomG.append(() => gLink.node())
@@ -113,7 +50,7 @@ class Home {
     .on('zoom', (event) => {
       container.select('g').attr('transform', event.transform)
     })
-    this.zoomGroups.set(this.numberOfFiles, container);
+    this.zoomGroups.set(numberOfFiles, container);
 
     container.call(zoom)
 
@@ -127,15 +64,14 @@ class Home {
       for (let depth = 1; depth <= maxDepth; depth++) {
         const nodesAtDepth = nodes.filter(n => n.depth === depth);
         nodesAtDepth.forEach(node => {
-          if(this.yearIsChanged) {
-            if (node.data.year >= this.minYearSliderValue.value && node.data.year <= this.maxYearSliderValue.value &&
+          if(yearIsChanged) {
+            if (node.data.year >= minYearSliderValue.value && node.data.year <= maxYearSliderValue.value &&
               this.filteredNodes.includes(node.parent)) {
-                console.log('TRUEEEEEEE')
             this.filteredNodes.push(node);
           }
         }
-        else if (this.frequencyIsChanged) {
-          if (node.data.frequency >= this.frequencySliderValue.value && 
+        else if (frequencyIsChanged) {
+          if (node.data.frequency >= frequencySliderValue.value && 
             this.filteredNodes.includes(node.parent)) {
           this.filteredNodes.push(node);
         }
@@ -158,42 +94,42 @@ class Home {
       let frequencyOldSizeSet = 0
       root.eachBefore(node => {
         if (node._children) {
-          yearOldSizeSet = this.years.size
-          frequencyOldSizeSet = this.frequencies.size
+          yearOldSizeSet = years.size
+          frequencyOldSizeSet = frequencies.size
 
           node._children.forEach(child => {
-            if(!this.years.has(child.data.year)){
-              this.years.add(child.data.year);
+            if(!years.has(child.data.year)){
+              years.add(child.data.year);
             }
-            if(!this.frequencies.has(child.data.frequency)){
-              this.frequencies.add(child.data.frequency);
+            if(!frequencies.has(child.data.frequency)){
+              frequencies.add(child.data.frequency);
             }
           })
-          if( this.years.size >  yearOldSizeSet) {
-            const minYear = Math.min(...this.years);
-            const maxYear = Math.max(...this.years);
+          if( years.size >  yearOldSizeSet) {
+            const minYear = Math.min(...years);
+            const maxYear = Math.max(...years);
             
-            this.minYearSliderValue.min = minYear;
-            this.minYearSliderValue.max = maxYear;
-            this.maxYearSliderValue.min = minYear;
-            this.maxYearSliderValue.max = maxYear;
+            minYearSliderValue.min = minYear;
+            minYearSliderValue.max = maxYear;
+            maxYearSliderValue.min = minYear;
+            maxYearSliderValue.max = maxYear;
             
-            this.minYearSliderValue.value = minYear;
-            this.maxYearSliderValue.value = maxYear;
+            minYearSliderValue.value = minYear;
+            maxYearSliderValue.value = maxYear;
             
-            this.minYearFilterValue.textContent = minYear;
-            this.maxYearFilterValue.textContent = maxYear;
+            minYearFilterValue.textContent = minYear;
+            maxYearFilterValue.textContent = maxYear;
         
-            this.yearIsChanged = true;
-            this.frequencyIsChanged = false;
+            yearIsChanged = true;
+            frequencyIsChanged = false;
           }
-          if( this.frequencies.size >  frequencyOldSizeSet) {
-            this.frequencySliderValue.min = Math.min(...this.frequencies);
-            this.frequencySliderValue.max = Math.max(...this.frequencies);
-            this.frequencySliderValue.value = Math.min(...this.frequencies);
-            this.frequencyFilterValue.textContent = this.frequencySliderValue.value;
-            this.yearIsChanged = false
-            this.frequencyIsChanged = true
+          if( frequencies.size >  frequencyOldSizeSet) {
+            frequencySliderValue.min = Math.min(...frequencies);
+            frequencySliderValue.max = Math.max(...frequencies);
+            frequencySliderValue.value = Math.min(...frequencies);
+            frequencyFilterValue.textContent = frequencySliderValue.value;
+            yearIsChanged = false
+            frequencyIsChanged = true
           }
           
       }
@@ -289,7 +225,7 @@ class Home {
         d.x0 = d.x
         d.y0 = d.y
       });
-      this.rightClick(container, treeInstance)
+      rightClick(container, treeInstance)
     };
     
     treeInstance.update = updateFunction
@@ -304,177 +240,11 @@ class Home {
     });
 
     updateFunction(null, root)
-    this.filterByYear(root, treeInstance)
-    this.filterByFrequency(root, treeInstance)
+    filterByYear(root, treeInstance)
+    filterByFrequency(root, treeInstance)
+    search()
 
     return this.svg.node()
-  }
-  rightClick(container, treeInstance) {
-    const self = this
-    
-    let currentNode = null
-    
-    d3.selectAll(`.tree-group-${treeInstance.id}`).on('contextmenu', function(event, d) {
-      event.preventDefault()
-      event.stopPropagation()
-    
-      currentNode = d
-      
-      const [x, y] = d3.pointer(event, container.node());
-      
-      container.selectAll('.right-click-menu').remove()
-      
-      const menuGroup = container.append('g')
-        .attr('class', 'right-click-menu')
-        .attr('transform', `translate(${x}, ${y})`)
-      
-      menuGroup.append('rect')
-        .transition()
-        .attr('width', 160)
-        .attr('height', 2)
-        .duration(200)
-        .transition()
-        .duration(300)
-        .attr('width', 160)
-        .attr('height', 50)
-        .attr('fill', 'lightgrey')
-        .attr('rx', 5)
-        .attr('ry', 5)
-      
-      const hovering_rect = menuGroup.append('rect')
-        .attr('class', 'highlight-rect')
-        .attr('width', 150)
-        .attr('height', 30)
-        .attr('x', 5)
-        .attr('y', 10)
-        .attr('fill', 'gold')
-        .attr('rx', 3)
-        .attr('ry', 3)
-        .attr('opacity', 0);
-      
-      const deleteText = menuGroup.append('text')
-        .attr('transform', `translate(${15}, ${30})`)
-        .text('Delete Node')
-        .attr('font-size', '14px')
-        .style('opacity', 0)
-        .style('pointer-events', 'all')
-        .on('click', function() {
-          if (currentNode) {
-            self.showNotification(`Deleting node: ${currentNode.data.name}`);
-            self.deleteNode(currentNode, treeInstance);
-          }
-        });
-      
-      deleteText.transition()
-        .delay(320)
-        .style('opacity', 1);
-      
-      hovering_rect.on('mouseover', () => hovering_rect.attr('opacity', 0.7));
-      deleteText.on('mouseover', () => hovering_rect.attr('opacity', 0.7));
-      
-      hovering_rect.on('mouseout', () => hovering_rect.attr('opacity', 0));
-      deleteText.on('mouseout', () => hovering_rect.attr('opacity', 0));
-    });
-    
-    container.on('click', () => {
-      container.selectAll('.right-click-menu').remove();
-    });
-    
-    this.svg.on('contextmenu', function(event) {
-      if (event.target.tagName === 'svg' || event.target.classList.contains('visualization-container')) {
-        container.selectAll('.right-click-menu').remove();
-      }
-    });
-  }
-
-  deleteNode(selectedNode, treeInstance) {
-    
-    if (selectedNode.depth === 0) {
-      this.showNotification("Cannot delete root node");
-      return;
-    }
-    
-    const parent = selectedNode.parent;
-    
-    if (parent) {
-
-      if (parent.children) {
-        parent.children = parent.children.filter(child => child.id !== selectedNode.id);
-        
-        if (parent.children.length === 0) {
-          parent.children = null;
-        }
-      }
-      
-      if (parent._children) {
-        parent._children = parent._children.filter(child => child.id !== selectedNode.id);
-        
-        if (parent._children.length === 0) {
-          parent._children = null;
-        }
-      }
-      treeInstance.update(null, parent);
-      treeInstance.container.selectAll('.right-click-menu').remove();
-    }
-  }
-
-  showNotification(message) {
-    const notification = d3.select('#notification');
-    notification.text(message)
-      .style('opacity', 1)
-      .style('top', '20px')
-      .attr('fill', 'crimson')
-
-    
-    setTimeout(() => {
-      notification.transition()
-        .duration(500)
-        .style('opacity', 0)
-        .style('top', '10px')
-    }, 2000);
-  }
-
-  search() {
-    d3.select('#searchField').on('input', (e) => {
-      const searchedText = e.target.value.toLowerCase()
-      d3.selectAll('.tree-group').each(function(d) {
-        const nodeText = d.data.name.toLowerCase()
-        const selectedElementText = d3.select(this).select('text')
-        const selectedElementCircle = d3.select(this).select('circle')
-        selectedElementText.transition().attr('fill',d => d._children ? "#555" : "#999").attr('font-size', d => d.depth === 0 ? '12px' : '10px')
-        selectedElementCircle.transition().attr('fill',d => d._children ? "#555" : "#999").attr('r',d => d.depth === 0 ? 8 : 2.5)
-
-        if(searchedText === nodeText) {
-          selectedElementText.transition().duration(1250).attr('fill','#0080FF').attr('font-size', '18px').attr('transform',  d => d._children  ?'translate(-5, 0)': 'translate(5, 0)')
-          selectedElementCircle.transition().duration(1250).attr('fill','#0080FF').attr('r','8')
-        }
-      })
-    })
-  }
-
-  filterByYear(root, treeInstance) {
-    d3.select('.min-year-filter-slide').on(`input.tree-${treeInstance.id}`, (e) => {
-      this.minYearFilterValue.textContent = e.target.value;
-      this.yearIsChanged = true;
-      this.frequencyIsChanged = false;
-      treeInstance.update(null, root);
-    });
-    
-    d3.select('.max-year-filter-slide').on(`input.tree-${treeInstance.id}`, (e) => {
-      this.maxYearFilterValue.textContent = e.target.value;
-      this.yearIsChanged = true;
-      this.frequencyIsChanged = false;
-      treeInstance.update(null, root);
-    });
-  }
-  
-  filterByFrequency(root, treeInstance) {
-    d3.select('.frequency-filter-slide').on(`input.tree-${treeInstance.id}`, (e) => {
-      this.frequencyFilterValue.textContent = e.target.value;
-      this.frequencyIsChanged = true;
-      this.yearIsChanged = false;
-      treeInstance.update(null, root);
-    });
   }
 }
 

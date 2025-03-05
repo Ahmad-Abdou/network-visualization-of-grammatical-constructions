@@ -1,42 +1,54 @@
 const container = document.querySelector('.tree-container')
 const home = new Home('#tree-container', container.clientWidth, container.clientHeight)
+let numberOfFiles = 0
+let treeInstances = []
+
+const buildHierarchyFromCSV_5_Verbs = (csvData, file) => {
+  let root = { name: file.slice(7, file.length - 4), children: [] };
+  csvData.forEach(row => {
+    const columns = Object.keys(row)
+    let current = root;
+    columns.forEach(verbKey => {
+      if(verbKey.startsWith('verb')) {
+        const verbValue = row[verbKey];
+        if (verbValue) {
+          let child = current.children.find(c => c.name === verbValue);
+          if (!child) {
+            child = { name: verbValue, year:row['year'], frequency : row['frequency'], children: [] };
+            current.children.push(child);
+          }
+          current = child;
+        }
+      }
+    });
+  });
+  return root;
+}
+const buildHirearchy = (file) => {
+  d3.csv(file).then((csvData) => {
+    const nestedData = buildHierarchyFromCSV_5_Verbs(csvData, file);
+    numberOfFiles++;
+    const root = d3.hierarchy(nestedData);
+    
+    const treeInstance = {
+      id: home.numberOfFiles,
+      root: root,
+      container: null,
+      update: null
+    };
+    
+    treeInstances.push(treeInstance);
+    home.collapsable(root, treeInstance);
+  });
+}
 
 window.onload = function() {
   document.querySelector('.file-input').addEventListener('change', getFileName);
-  
-  // Add ability to switch between trees if needed
-  document.addEventListener('keydown', (event) => {
-    // Optional: Add keyboard shortcuts to switch between trees
-    if (event.key >= '1' && event.key <= '9') {
-      const treeIndex = parseInt(event.key) - 1;
-      if (home.treeInstances[treeIndex]) {
-        // Focus on the selected tree
-        home.treeInstances.forEach((tree, i) => {
-          const opacity = i === treeIndex ? 1.0 : 0.3;
-          tree.container.style("opacity", opacity);
-        });
-      }
-    }
-    // Press 0 to show all trees
-    if (event.key === '0') {
-      home.treeInstances.forEach(tree => {
-        tree.container.style("opacity", 1.0);
-      });
-    }
-  });
 }
 
 const getFileName = (event) => {
   const files = event.target.files;
   const fileName = files[0].name;
-  home.buildHirearchy(`./data/${fileName}`)
+  buildHirearchy(`./data/${fileName}`)
 }
 
-function notifyMessage(text) {
-  const notification = document.getElementById('notification');
-  notification.textContent = text
-  notification.style.transform = 'translate(0, 50px)'
-  setTimeout(() => {
-    notification.style.transform = 'translate(0, -290px)'
-  }, 2000)
-}
