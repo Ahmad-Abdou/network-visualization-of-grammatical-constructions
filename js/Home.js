@@ -8,6 +8,7 @@ class Home {
     this.zoomGroups = new Map()
     this.filteredNodes = []
     this.update = null
+    this.currentColor = null
   }
 
 
@@ -152,7 +153,6 @@ class Home {
 
       const node = gNode.selectAll("g.tree-group")
         .data(this.filteredNodes, d => d.id)
-
       const nodeEnter = node.enter().append("g")
           .attr('class', `tree-group tree-group-${treeInstance.id}`)
           .attr("transform", d => `translate(${source.y0},${source.x0})`)
@@ -161,25 +161,32 @@ class Home {
           .on("click", (event, d) => {
             d.children = d.children ? null : d._children;
             updateFunction(event, d)
-          }).on('mouseover', (e) => {
-            d3.select(e.target).attr('r', 7).attr('fill', 'crimson').attr('opacity', '0.7').attr('transform', 'translate(2,0)')
-          }).on('mouseout', (e, d) => {
-            d3.selectAll('.tree-group').selectAll('circle')
-              .each(function(d) {
-                if (d3.select(this).attr('fill') === 'crimson') {
-                  d3.select(this)
-                    .attr("fill", d => d._children ? "#555" : "#999")
-                    .attr("r", d => d.depth === 0 ? 8 : 2.5)
-                    .attr('opacity', '1')
-                    .attr('transform', 'translate(0,0)');
-                }
-              })
-          })
+          });
 
       nodeEnter.append("circle")
-          .attr("r", d => d.depth === 0 ? 8 : 2.5)
+          .attr("r", d => d.depth === 0 ? 10 : 2.5)
           .attr("fill", d => d._children ? "#555" : "#999")
-          .attr("stroke-width", 10);
+          .attr("stroke-width", 10)
+          .on('mouseover', function(e) {
+            const circle = d3.select(this);
+            circle.attr('data-original-color', circle.attr('fill'))
+                 .attr('data-original-radius', circle.attr('r'));
+            
+            circle.attr('r', 7)
+                  .attr('fill', 'crimson')
+                  .attr('opacity', '0.7')
+                  .attr('transform', 'translate(2,0)');
+          })
+          .on('mouseout', function(e) {
+            const circle = d3.select(this);
+            const originalColor = circle.attr('data-original-color');
+            const originalRadius = circle.attr('data-original-radius');
+            
+            circle.attr('fill', originalColor)
+                  .attr('r', originalRadius)
+                  .attr('opacity', '1')
+                  .attr('transform', 'translate(0,0)');
+          });
 
       nodeEnter.append("text")
           .attr("dy", "0.31em")

@@ -31,12 +31,11 @@ const buildHirearchy = (file) => {
     const root = d3.hierarchy(nestedData);
     
     const treeInstance = {
-      id: home.numberOfFiles,
+      id: numberOfFiles,
       root: root,
       container: null,
       update: null
     };
-    
     treeInstances.push(treeInstance);
     home.collapsable(root, treeInstance);
   });
