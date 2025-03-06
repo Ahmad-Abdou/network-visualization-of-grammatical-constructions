@@ -48,7 +48,7 @@ const rightClick = (container, treeInstance) => {
       .style('pointer-events', 'all')
       .on('click', function() {
         if (currentNode) {
-          showNotification(`Deleting node: ${currentNode.data.name}`);
+          showNotification(`Deleting node: ${currentNode.data.name}`, 'crimson');
           deleteNode(currentNode, treeInstance);
         }
       });
@@ -81,7 +81,7 @@ const rightClick = (container, treeInstance) => {
 const deleteNode = (selectedNode, treeInstance) => {
     
   if (selectedNode.depth === 0) {
-    showNotification("Cannot delete root node");
+    showNotification("Cannot delete root node", 'crimson');
     return;
   }
   

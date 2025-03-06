@@ -1,129 +1,81 @@
-let wordColor = '#FFB200';
-let yearColor = '#3d348b';
-let frequencyColor = '#8d0801';
+let wordColor = '#FFB200'
+let yearColor = '#3d348b'
+let frequencyColor = '#8d0801'
+const overlapColor = '#800080'
 
-const wordContainer = document.getElementById('word-color');
-wordContainer.value = wordColor;
+const wordContainer = document.getElementById('word-color')
+wordContainer.value = wordColor
 wordContainer.addEventListener('input', (e) => {
-  wordColor = e.target.value;
-  updateWordMatches();
+  wordColor = e.target.value
+  updateAllFilters()
 });
 
 const yearContainer = document.getElementById('year-color');
 yearContainer.value = yearColor;
 yearContainer.addEventListener('input', (e) => {
   yearColor = e.target.value;
-  updateYearMatches();
+  updateAllFilters();
 });
 
 const frequencyContainer = document.getElementById('frequency-color');
 frequencyContainer.value = frequencyColor;
 frequencyContainer.addEventListener('input', (e) => {
   frequencyColor = e.target.value;
-  updateFrequencyMatches();
+  updateAllFilters();
 });
 
-function updateWordMatches() {
-  const searchedText = document.getElementById('searchWord').value.toLowerCase();
 
-  d3.selectAll('.tree-group').each(function(d) {
-    const nodeText = d.data.name.toLowerCase();
-    const selectedElementText = d3.select(this).select('text');
-    const selectedElementCircle = d3.select(this).select('circle');
-
-    if (searchedText === nodeText) {
-      selectedElementText.transition().duration(1250)
-        .attr('fill', wordColor)
-        .attr('font-size', '15px')
-        .attr('transform', d => d._children ? 'translate(-5, 0)' : 'translate(5, 0)');
-
-      selectedElementCircle.transition().duration(1250)
-        .attr('fill', wordColor)
-        .attr('r', '7');
-
-      wordContainer.style.visibility = 'visible';
-    } else {
-      selectedElementText.transition()
-        .attr('fill', d => d._children ? "#555" : "#999")
-        .attr('font-size', d => d.depth === 0 ? '12px' : '10px');
-
-      selectedElementCircle.transition()
-        .attr('fill', d => d._children ? "#555" : "#999")
-        .attr('r', d => d.depth === 0 ? 7 : 2.5);
-    }
-  });
+function search(){
+  document.getElementById('searchWord').addEventListener('input', updateAllFilters);
+  document.getElementById('searchYear').addEventListener('input', updateAllFilters);
+  document.getElementById('searchFrequency').addEventListener('input', updateAllFilters);
 }
 
-function updateYearMatches() {
-  const searchedText = document.getElementById('searchYear').value.toLowerCase();
+
+function updateAllFilters() {
+  const wordSearch = document.getElementById('searchWord').value.toLowerCase();
+  const yearSearch = document.getElementById('searchYear').value.toLowerCase();
+  const frequencySearch = document.getElementById('searchFrequency').value.toLowerCase();
 
   d3.selectAll('.tree-group').each(function(d) {
-    const nodeYear = d.data.year ? d.data.year.toString().toLowerCase() : "";
-    const selectedElementText = d3.select(this).select('text');
-    const selectedElementCircle = d3.select(this).select('circle');
+    const node = d3.select(this);
+    const textElem = node.select('text');
+    const circleElem = node.select('circle');
 
-    if (searchedText === nodeYear) {
-      selectedElementText.transition().duration(1250)
-        .attr('fill', yearColor)
-        .attr('font-size', '15px')
-        .attr('transform', d => d._children ? 'translate(-5, 0)' : 'translate(5, 0)');
+    const wordMatch = wordSearch && d.data.name.toLowerCase() === wordSearch;
+    const yearMatch = yearSearch && d.data.year?.toString().toLowerCase() === yearSearch;
+    const frequencyMatch = frequencySearch && d.data.frequency?.toString().toLowerCase() === frequencySearch;
 
-      selectedElementCircle.transition().duration(1250)
-        .attr('fill', yearColor)
-        .attr('r', '7');
+    const matchCount = [wordMatch, yearMatch, frequencyMatch].filter(Boolean).length
 
-      yearContainer.style.visibility = 'visible';
+    let color
+    if (matchCount >= 2) {
+      color = overlapColor;
+    } else if (matchCount === 1) {
+      if (wordMatch) {
+        color = wordColor
+      }
+      else if (yearMatch) {
+        color = yearColor
+      }
+      else if (frequencyMatch){
+        color = frequencyColor
+      }
     } else {
-      selectedElementText.transition()
-        .attr('fill', d => d._children ? "#555" : "#999")
-        .attr('font-size', d => d.depth === 0 ? '12px' : '10px');
-
-      selectedElementCircle.transition()
-        .attr('fill', d => d._children ? "#555" : "#999")
-        .attr('r', d => d.depth === 0 ? 7 : 2.5);
+      color = d._children ? "#555" : "#999"
     }
+
+    textElem.transition().duration(1250)
+      .attr('fill', color)
+      .attr('font-size', matchCount ? '15px' : (d.depth === 0 ? '12px' : '10px'))
+      .attr('transform', d => d._children ? 'translate(-5, 0)' : 'translate(5, 0)');
+
+    circleElem.transition().duration(1250)
+      .attr('fill', color)
+      .attr('r', matchCount ? '7' : (d.depth === 0 ? 7 : 2.5));
   });
+
+  wordContainer.style.visibility = wordSearch ? 'visible' : 'hidden';
+  yearContainer.style.visibility = yearSearch ? 'visible' : 'hidden';
+  frequencyContainer.style.visibility = frequencySearch ? 'visible' : 'hidden';
 }
-
-function updateFrequencyMatches() {
-  const searchedText = document.getElementById('searchFrequency').value.toLowerCase();
-
-  d3.selectAll('.tree-group').each(function(d) {
-    const nodeFrequency = d.data.frequency ? d.data.frequency.toString().toLowerCase() : "";
-    const selectedElementText = d3.select(this).select('text');
-    const selectedElementCircle = d3.select(this).select('circle');
-
-    if (searchedText === nodeFrequency) {
-      selectedElementText.transition().duration(1250)
-        .attr('fill', frequencyColor)
-        .attr('font-size', '15px')
-        .attr('transform', d => d._children ? 'translate(-5, 0)' : 'translate(5, 0)');
-
-      selectedElementCircle.transition().duration(1250)
-        .attr('fill', frequencyColor)
-        .attr('r', '7');
-
-      frequencyContainer.style.visibility = 'visible';
-    } else {
-      selectedElementText.transition()
-        .attr('fill', d => d._children ? "#555" : "#999")
-        .attr('font-size', d => d.depth === 0 ? '12px' : '10px');
-
-      selectedElementCircle.transition()
-        .attr('fill', d => d._children ? "#555" : "#999")
-        .attr('r', d => d.depth === 0 ? 7 : 2.5);
-    }
-  });
-}
-
-const search = () => {
-  d3.select('#searchWord').on('input', () => {
-    updateWordMatches();
-  });
-  d3.select('#searchYear').on('input', () => {
-    updateYearMatches();
-  });
-  d3.select('#searchFrequency').on('input', () => {
-    updateFrequencyMatches();
-  });
-};

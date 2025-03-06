@@ -217,7 +217,7 @@ input[type="color"]::-webkit-color-swatch {
   top: 10px;
   left: 50%;
   transform: translateX(-50%);
-  background-color: crimson;
+  /* background-color: crimson; */
   color: white;
   padding: 10px 20px;
   border-radius: 5px;
