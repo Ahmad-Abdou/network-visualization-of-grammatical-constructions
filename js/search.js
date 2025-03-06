@@ -1,7 +1,7 @@
 let wordColor = '#FFB200'
 let yearColor = '#3d348b'
 let frequencyColor = '#8d0801'
-const overlapColor = '#800080'
+const overlapColor = 'green'
 
 const wordContainer = document.getElementById('word-color')
 wordContainer.value = wordColor
