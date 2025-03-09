@@ -78,17 +78,17 @@ class Chart {
         .attr('dy', (d, i) => i * 15)
         .text(d => d);
         this.rect = d3.select(e.target)
-        this.rect.attr('fill', 'gold')
+        this.rect.attr('fill', 'crimson').attr('stroke', 'black').attr('stroke-width', 1)
       })
       bars.on('mousemove', (e)=> {
         const [x, y] = d3.pointer(e)
         this.chartGroup.select('.tooltips').attr('x', x - 20).attr('y', y - 70)
-        this.rect.attr('fill', 'gold')
+        this.rect.attr('fill', 'crimson').attr('stroke', 'black').attr('stroke-width', 1)
 
       }).on('mouseout', (e) => {
         d3.select('.rect-tooltips').remove()
         d3.select('.text-tooltips').remove()
-        this.rect.attr('fill', '#0080FF')
+        this.rect.attr('fill', '#0080FF').attr('stroke-width', 0)
       })
       bars.transition()
       .duration(1250)
