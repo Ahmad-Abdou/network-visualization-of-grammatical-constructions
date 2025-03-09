@@ -11,14 +11,16 @@ class Chart {
       .attr('width', this.width)
       .attr('height', this.height);
     
-    this.chartGroup = this.svg.append('g')
-      .attr('transform', `translate(${margin.left}, ${margin.top})`);
+    this.rect = null
     this.xScale = null
     this.yScale = null
   }
 
   drawAxis(data) {
-
+    this.svg.select('.bar-chart-group').remove()
+    this.chartGroup = this.svg.append('g')
+    .attr('class', 'bar-chart-group')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
     this.xScale = d3.scaleLinear()
       .domain([d3.min(Object.keys(data)) , d3.max(Object.keys(data))])
       .range([0,this.innerwidth]);
@@ -50,7 +52,7 @@ class Chart {
       this.chartGroup.append('g')
       .attr('class', 'tooltips')
       
-      bars.on('mouseover', (e, d)=> {
+      bars.on('mouseover', (e, d) => {
         const [x, y] = d3.pointer(e)
         this.chartGroup.select('.tooltips')
         .append('rect')
@@ -75,17 +77,22 @@ class Chart {
         .attr('x', x + 20)
         .attr('dy', (d, i) => i * 15)
         .text(d => d);
+        this.rect = d3.select(e.target)
+        this.rect.attr('fill', 'gold')
       })
       bars.on('mousemove', (e)=> {
         const [x, y] = d3.pointer(e)
         this.chartGroup.select('.tooltips').attr('x', x - 20).attr('y', y - 70)
+        this.rect.attr('fill', 'gold')
+
       }).on('mouseout', (e) => {
         d3.select('.rect-tooltips').remove()
         d3.select('.text-tooltips').remove()
+        this.rect.attr('fill', '#0080FF')
       })
       bars.transition()
       .duration(1250)
-      .attr('width', 3)
+      .attr('width', 4)
       .attr('height', (d,i) => this.innerheight - this.yScale(d[1]))
       .attr('fill', '#0080FF')
       .attr('cursor', 'pointer')
