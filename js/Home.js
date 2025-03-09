@@ -9,6 +9,7 @@ class Home {
     this.filteredNodes = []
     this.update = null
     this.currentColor = null
+    this.chartData = {}
   }
 
 
@@ -68,7 +69,7 @@ class Home {
           if(yearIsChanged) {
             if (node.data.year >= minYearSliderValue.value && node.data.year <= maxYearSliderValue.value &&
               this.filteredNodes.includes(node.parent)) {
-            this.filteredNodes.push(node);
+              this.filteredNodes.push(node);
           }
         }
         else if (frequencyIsChanged) {
@@ -132,7 +133,6 @@ class Home {
             yearIsChanged = false
             frequencyIsChanged = true
           }
-          
       }
         if (node.x < left.x) left = node;
         if (node.x > right.x) right = node;
@@ -241,6 +241,14 @@ class Home {
     root.x0 = dy / 2
     root.y0 = 0
     root.descendants().forEach((d, i) => {
+      if(d.depth !== 0) {
+        const newYear = d.data.year
+        if ( newYear in this.chartData) {
+          this.chartData[newYear]++
+        } else {
+          this.chartData[newYear] = 1
+        }
+      }
       d.id = i
       d._children = d.children
       if (d.depth) d.children = null
@@ -250,6 +258,8 @@ class Home {
     filterByYear(root, treeInstance)
     filterByFrequency(root, treeInstance)
     search()
+    chart.drawAxis(this.chartData)
+    chart.showBarChartData(this.chartData)
     return this.svg.node()
   }
 }

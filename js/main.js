@@ -1,5 +1,7 @@
 const container = document.querySelector('.tree-container')
+const margin = {left: 50, top: 50, right: 50, bottom: 50}
 const home = new Home('#tree-container', container.clientWidth, container.clientHeight)
+const chart = new Chart('#chart', 400, 400, margin)
 let numberOfFiles = 0
 let treeInstances = []
 
