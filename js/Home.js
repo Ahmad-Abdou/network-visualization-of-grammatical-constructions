@@ -150,7 +150,6 @@ class Home {
             Math.max(height, min_height)
         ])
           .tween("resize", window.ResizeObserver ? null : () => () => this.svg.dispatch("toggle"));
-
       const node = gNode.selectAll("g.tree-group")
         .data(this.filteredNodes, d => d.id)
       const nodeEnter = node.enter().append("g")
@@ -159,8 +158,8 @@ class Home {
           .attr("fill-opacity", 0)
           .attr("stroke-opacity", 0)
           .on("click", (event, d) => {
-            d.children = d.children ? null : d._children;
-            updateFunction(event, d)
+          d.children = d.children ? null : d._children; 
+          updateFunction(event,  d)
           });
 
       nodeEnter.append("circle")
@@ -232,7 +231,7 @@ class Home {
         d.x0 = d.x
         d.y0 = d.y
       });
-      rightClick(container, treeInstance)
+      rightClick(container, treeInstance, updateFunction)
     };
     
     treeInstance.update = updateFunction
