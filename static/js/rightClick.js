@@ -102,12 +102,12 @@ const rightClick = (container, treeInstance, updateFunction) => {
     container.selectAll('.right-click-menu').remove();
   });
   
-  home.svg.on('contextmenu', function(event) {
+  tree.svg.on('contextmenu', function(event) {
     if (event.target.tagName === 'svg' || event.target.classList.contains('visualization-container')) {
       container.selectAll('.right-click-menu').remove();
     }
   });
-  home.svg.on('click', () => {
+  tree.svg.on('click', () => {
     container.selectAll('.right-click-menu').remove();
   })
 }

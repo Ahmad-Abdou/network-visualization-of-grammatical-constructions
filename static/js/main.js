@@ -1,12 +1,14 @@
 const container = document.querySelector('.tree-container')
 const margin = {left: 50, top: 50, right: 50, bottom: 50}
-const home = new Home('#tree-container', container.clientWidth, container.clientHeight)
+// const tree = new Tree('#tree-container', container.clientWidth, container.clientHeight)
+const force = new ForceSimulation('#force-container', container.clientWidth, container.clientHeight)
+
 const chart = new Chart('#chart', 400, 400, margin)
 let numberOfFiles = 0
 let treeInstances = []
 
-const buildHierarchyFromCSV_5_Verbs = (csvData, file) => {
-  let root = { name: file.slice(7, file.length - 4), children: [] };
+const StructuringFile = (csvData, file) => {
+  let root = { name: file.slice(13, file.length - 4), children: [] };
   csvData.forEach(row => {
     const columns = Object.keys(row)
     let current = root;
@@ -28,7 +30,19 @@ const buildHierarchyFromCSV_5_Verbs = (csvData, file) => {
 }
 const buildHirearchy = (file) => {
   d3.csv(file).then((csvData) => {
-    const nestedData = buildHierarchyFromCSV_5_Verbs(csvData, file);
+    // const nestedData = StructuringFile(csvData, file);
+    // numberOfFiles++;
+    // const root = d3.hierarchy(nestedData);
+    
+    // const treeInstance = {
+    //   id: numberOfFiles,
+    //   root: root,
+    //   container: null,
+    //   update: null
+    // };
+    // treeInstances.push(treeInstance);
+    // tree.collapsable(root, treeInstance);
+    const nestedData = StructuringFile(csvData, file);
     numberOfFiles++;
     const root = d3.hierarchy(nestedData);
     
@@ -39,7 +53,7 @@ const buildHirearchy = (file) => {
       update: null
     };
     treeInstances.push(treeInstance);
-    home.collapsable(root, treeInstance);
+    force.forceSimulation(root);
   });
 }
 
@@ -50,6 +64,6 @@ window.onload = function() {
 const getFileName = (event) => {
   const files = event.target.files;
   const fileName = files[0].name;
-  buildHirearchy(`./data/${fileName}`)
+  buildHirearchy(`/static/data/${fileName}`)
 }
 

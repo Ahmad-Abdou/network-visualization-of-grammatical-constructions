@@ -1,4 +1,4 @@
-class Home {
+class Tree {
   constructor(id, width, height) {
     this.id = id
     this.width = width
