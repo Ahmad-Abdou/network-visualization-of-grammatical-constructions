@@ -76,8 +76,7 @@ const buildHirearchy = (file) => {
     } else if(mode === 'force' && force){
       force.forceSimulation(root);
     }
-    
-    const data = await fetch('/api/data', {
+    await fetch('/api/data', {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
