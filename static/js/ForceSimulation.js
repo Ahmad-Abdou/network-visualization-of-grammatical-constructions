@@ -28,11 +28,11 @@ class ForceSimulation {
       .join("line");
   
     const node = this.svg.append("g")
-      .attr("fill", "red")
+      .attr("fill", "crimson")
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-        .attr("fill", d => d.children ? null : "green")
+        .attr("fill", d => d.children ? null : "#17B169")
         .attr("stroke", d => d.children ? null : "#fff")
         .attr("r", d => d.children ? 5 : 3.5)
         .call(this.drag(simulation));

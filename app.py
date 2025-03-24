@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, jsonify
 import networkx as nx
 
 app = Flask(__name__)
@@ -7,7 +7,12 @@ app = Flask(__name__)
 def index():
    return render_template('index.html')
 
-G = nx.Graph()
+@app.route("/api/data", methods=["POST"])
+def fetchData():
+    data = request.json
+    csv_data = data.get('csvData')
+    print(csv_data)
+    return jsonify({"receivedData": csv_data})
 
 if __name__ == '__main__':
     app.run(debug=True)

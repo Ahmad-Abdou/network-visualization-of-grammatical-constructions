@@ -77,15 +77,13 @@ const buildHirearchy = (file) => {
       force.forceSimulation(root);
     }
     
-    // The commented fetch code is kept as is
-    // const data = await fetch('/api/data', {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json"
-    //   },
-    //   body: JSON.stringify({csvData})
-    // }) .then((r) => r.json())
-    // .then((data) => console.log(data));
+    const data = await fetch('/api/data', {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({csvData})
+    }) 
   });
 }
 
