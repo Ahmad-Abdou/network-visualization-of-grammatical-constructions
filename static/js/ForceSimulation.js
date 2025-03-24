@@ -4,13 +4,12 @@ class ForceSimulation {
     this.width = width
     this.height = height
     this.margin = {top:50, right : 50, bottom: 50, left: 50}
-    this.svg = d3.select('.tree-container').append('svg').attr('width', this.width).attr('height', this.height)
+    this.svg = d3.select('.tree-container').append('svg').attr('id', this.id).attr('width', this.width).attr('height', this.height)
     this.zoomGroups = new Map()
   }
 
 
   forceSimulation(root) {
-    // const root = d3.hierarchy(data);
     const links = root.links();
     const nodes = root.descendants();
   
@@ -29,15 +28,13 @@ class ForceSimulation {
       .join("line");
   
     const node = this.svg.append("g")
-        .attr("fill", "#fff")
-        .attr("stroke", "#000")
-        .attr("stroke-width", 1.5)
+      .attr("fill", "red")
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-        .attr("fill", d => d.children ? null : "#000")
+        .attr("fill", d => d.children ? null : "green")
         .attr("stroke", d => d.children ? null : "#fff")
-        .attr("r", 3.5)
+        .attr("r", d => d.children ? 5 : 3.5)
         .call(this.drag(simulation));
   
     node.append("title")

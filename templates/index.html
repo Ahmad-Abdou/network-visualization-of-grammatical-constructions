@@ -12,67 +12,72 @@
 <body>
   <div class="container">
     <div id="notification"></div>
-
-  <div class="tree-container"></div>
-  <div class="menu">
-    <label class="select-file file-input" >
-      Select file
-      <input class="file-input"  type="file" title="file" name="fileUpload">
-    </label>
-
-    <div class="search-word-color">
-      <label for="searchWord"></label>
-      <input id="searchWord" name="searchWord" type="text" placeholder="Search for a word">
-      <label for="wordcolor"></label>
-      <input id="word-color"  type="color">
+    <div class="tree-container">
+      <div class="mode-container">
+        <select name="mode" id="mode-btn">
+          <option value="force">Force Mode</option>
+          <option value="tree">Tree Mode</option>
+        </select>
+      </div>
     </div>
-    
-    <div class="search-year-color">
-      <label for="searchYear"></label>
-      <input id="searchYear" name="searchYear" type="number" placeholder="Search for a year">
-      <label for="yearcolor"></label>
-      <input id="year-color"  type="color">
-    </div>
+    <div class="menu">
+      <label class="select-file file-input" >
+        Select file
+        <input class="file-input"  type="file" title="file" name="fileUpload">
+      </label>
 
-    <div class="search-frequency-color">
-      <label for="searchFrequency"></label>
-      <input id="searchFrequency" name="searchFrequency" type="number" placeholder="Search for a frequency">
-      <label for="frequency"></label>
-      <input id="frequency-color"  type="color">
-    </div>
+      <div class="search-word-color">
+        <label for="searchWord"></label>
+        <input id="searchWord" name="searchWord" type="text" placeholder="Search for a word">
+        <label for="wordcolor"></label>
+        <input id="word-color"  type="color">
+      </div>
+      
+      <div class="search-year-color">
+        <label for="searchYear"></label>
+        <input id="searchYear" name="searchYear" type="number" placeholder="Search for a year">
+        <label for="yearcolor"></label>
+        <input id="year-color"  type="color">
+      </div>
 
-    <div class="filters">
-      <div class="year-filter-container">
-        <p class="year-filter">Year</p>
-        <div class="double-slider">
-            <input title="min year" type="range" name="min-year" id="min-year-slider" class="min-year-filter-slide">
-            <input title="max year" type="range" name="max-year" id="max-year-slider" class="max-year-filter-slide">
+      <div class="search-frequency-color">
+        <label for="searchFrequency"></label>
+        <input id="searchFrequency" name="searchFrequency" type="number" placeholder="Search for a frequency">
+        <label for="frequency"></label>
+        <input id="frequency-color"  type="color">
+      </div>
+
+      <div class="filters">
+        <div class="year-filter-container">
+          <p class="year-filter">Year</p>
+          <div class="double-slider">
+              <input title="min year" type="range" name="min-year" id="min-year-slider" class="min-year-filter-slide">
+              <input title="max year" type="range" name="max-year" id="max-year-slider" class="max-year-filter-slide">
+          </div>
+          <div class="year-filter-value">
+            <p class="min-year-filter-value"></p>
+            <p>-</p>
+            <p class="max-year-filter-value"></p>
+          </div>
         </div>
-        <div class="year-filter-value">
-          <p class="min-year-filter-value"></p>
-          <p>-</p>
-          <p class="max-year-filter-value"></p>
+        <div class="frequency-filter-container">
+          <p class="frequency-filter">Frequency</p>
+          <input title="frequency" type="range" name="slider" id="frequency-slider" class="frequency-filter-slide">
+          <p class="frequency-filter-value">-</p>
         </div>
       </div>
-      <div class="frequency-filter-container">
-        <p class="frequency-filter">Frequency</p>
-        <input title="frequency" type="range" name="slider" id="frequency-slider" class="frequency-filter-slide">
-        <p class="frequency-filter-value">-</p>
+      <div class="timeline-animation-container">
+        <select name="animation-type" id="animation-type">
+          <option selected disabled>Animation</option>
+          <option value="Spread">Spread</option>
+        </select>
+        <div class="timeline-animation">
+          <button id="playButton" title="playBack"> <div id="shape" class="stop"></div></button>
+          <input type="range" id="timeSlider" min="0" max="100" value="0">
+        </div>
       </div>
+      <div id="chart"></div>
     </div>
-    <div class="timeline-animation-container">
-      <select name="animation-type" id="animation-type">
-        <option selected disabled>Animation</option>
-        <option value="Spread">Spread</option>
-      </select>
-      <div class="timeline-animation">
-        <button id="playButton" title="playBack"> <div id="shape" class="stop"></div></button>
-        <input type="range" id="timeSlider" min="0" max="100" value="0">
-      </div>
-    </div>
-    <div id="chart"></div>
-
-  </div>
 </div>
 
   <script src="https://d3js.org/d3.v6.min.js"></script>
