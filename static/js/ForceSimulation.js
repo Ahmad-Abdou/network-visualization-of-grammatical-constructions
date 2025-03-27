@@ -35,44 +35,50 @@ class ForceSimulation {
         simulation.tick();
       }
 
-    const link = this.nodeGroup.append("g")
-      .attr("stroke", "#999")
-      .attr("stroke-opacity", 0.6)
-      .selectAll("line")
-      .data(links)
-      .join("line")
-      .attr("x1", d => d.source.x)
-      .attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x)
-      .attr("y2", d => d.target.y);
-  
     const selected_option_degree = document.querySelector('.degree-selection')
     selected_option_degree.addEventListener('change', () => {
       d3.select('#nodes').remove()
+      d3.select('#links').remove()
+
+      const link = this.nodeGroup.append("g")
+        .attr("stroke", "#999")
+        .attr('id', 'links')
+        .attr("stroke-opacity", 0.6)
+        .selectAll("line")
+        .data(links)
+        .join("line")
+        .attr("x1", d => d.source.x)
+        .attr("y1", d => d.source.y)
+        .attr("x2", d => d.target.x)
+        .attr("y2", d => d.target.y)
+
       const node = this.nodeGroup.append("g")
-      .attr('id', 'nodes')
-      .attr("fill", "crimson")
-      .selectAll("circle")
-      .data(nodes)
-      .join("circle")
-      .attr("fill", d => this.calculateNodeColor(d))
-      .attr("stroke", d => d.children ? null : "#fff")
-      .attr("r", (d) => {
-        if (selected_option_degree.value === 'degree'){
-          return this.calculateDegree(d)
-        }else if (selected_option_degree.value === 'in_degree'){
-          return this.calculateInDegree(d)
-        }else if (selected_option_degree.value === 'out_degree'){
-          return this.calculateOutDegree(d)
-        }
-      } )
-      .attr("cx", d => d.x)
-      .attr("cy", d => d.y)
-      .call(this.drag(simulation));
+        .attr('id', 'nodes')
+        .attr("fill", "crimson")
+        .selectAll("circle")
+        .data(nodes)
+        .join("circle")
+        .attr("fill", d => this.calculateNodeColor(d))
+        .attr("stroke", d => d.children ? null : "#fff")
+        .attr("r", (d) => {
+          if (selected_option_degree.value === 'degree'){
+            return this.calculateDegree(d)
+          }else if (selected_option_degree.value === 'in_degree'){
+            return this.calculateInDegree(d)
+          }else if (selected_option_degree.value === 'out_degree'){
+            return this.calculateOutDegree(d)
+          }
+        } )
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+        .call(this.drag(simulation));
       
 
-      node.append("title")
-        .text(d => d.name);
+
+        node.append("title")
+        .text(d => {
+          return`Name: ${d.name}\n Degree: ${this.degree[d.name]}\n In_degree: ${this.in_degree[d.name]}\n Out_degree: ${this.out_degree[d.name]}`
+        });
 
       simulation.on("tick", () => {
         link
@@ -97,6 +103,19 @@ class ForceSimulation {
 
       }
     })
+    
+    const link = this.nodeGroup.append("g")
+      .attr("stroke", "#999")
+      .attr('id', 'links')
+      .attr("stroke-opacity", 0.6)
+      .selectAll("line")
+      .data(links)
+      .join("line")
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+
     const node = this.nodeGroup.append("g")
       .attr('id', 'nodes')
       .attr("fill", "crimson")
@@ -120,8 +139,11 @@ class ForceSimulation {
       .call(this.drag(simulation));
       
 
-    node.append("title")
-      .text(d => d.name);
+
+      node.append("title")
+      .text(d => {
+        return`Name: ${d.name}\n Degree: ${this.degree[d.name]}\n In_degree: ${this.in_degree[d.name]}\n Out_degree: ${this.out_degree[d.name]}`
+      });
 
 
     simulation.on("tick", () => {
