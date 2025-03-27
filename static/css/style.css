@@ -1,10 +1,10 @@
 :root {
-  --blue: #0080FF;
-  --grey: lightgray;
-  --red: crimson;
+  --blue: #0267cc;
+  --dark: #210F37;
+  --red: #872341;
   --med-size: 18px;
   --font-family: "Big Shoulders", sans-serif;
-
+  color: white;
 }
 * {
 
@@ -14,7 +14,7 @@
   letter-spacing: 1px;
 }
 body{
-  background-color: var(--grey);
+  background-color: var(--dark);
   padding: 5px;
   margin: 0;
 }
@@ -29,7 +29,7 @@ body{
 .tree-container{
   width: 80%;
   height: 100%;
-  border: 1px solid var(--grey);
+  border: 1px solid var(--dark);
   overflow-y:auto;
   overflow-x: hidden;
   background-color: rgb(255, 255, 255);
@@ -45,10 +45,10 @@ body{
   flex-direction: column;
   gap: 20px;
   padding: 5px;
-  background-color: var(--grey);
+  background-color: var(--dark);
 }
 .select-file{
-  background-color: var(--blue);
+  background-color: var(--red);
   border: none;
   width: 100%;
   height: 20px;
@@ -84,7 +84,7 @@ body{
 }
 
 .filter-slide{
-  border: 2px solid var(--grey);
+  border: 2px solid var(--dark);
 }
 text{
   pointer-events: none;
@@ -155,7 +155,7 @@ path{
   height: 20px;
   border-radius: 20%;
   -webkit-appearance: none;
-  background: var(--blue);
+  background: var(--red);
   cursor: pointer;
 }
 
@@ -172,7 +172,7 @@ path{
 }
 
 input[type='range']{
-   accent-color: var(--blue)
+   accent-color: var(--red)
    }
 .search-word-color, .search-year-color, .search-frequency-color{
   border-radius: 10px;
@@ -227,7 +227,7 @@ input[type="color"]::-webkit-color-swatch {
   
 }
 
-.timeline-animation-container{
+.timeline-animation-container, .degree-container {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -236,7 +236,11 @@ input[type="color"]::-webkit-color-swatch {
   display: flex;
   gap: 10px;
 }
-
+.degree-selection{
+  font-size: 15px;
+  padding: 5px;
+  border-radius: 5px;
+}
 #timeSlider{
   flex: 8;
 }
@@ -268,14 +272,14 @@ input[type="color"]::-webkit-color-swatch {
   height: 0;
   margin-left: 2px;
   border-top: 8px solid transparent;
-  border-left: 16px solid rgb(0, 133, 11);
+  border-left: 16px solid #4B4376;
   border-bottom: 8px solid transparent;
 }
 .run{
   width: 6px;
   height: 15px;
-  border-right: 5px solid rgb(0, 133, 11);
-  border-left: 5px solid rgb(0, 133, 11);
+  border-right: 5px solid #4B4376;
+  border-left: 5px solid #4B4376;
 }
 
 #mode-btn{
