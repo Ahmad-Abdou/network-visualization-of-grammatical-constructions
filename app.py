@@ -2,10 +2,10 @@ from flask import Flask, render_template, request, jsonify
 import networkx as nx
 
 app = Flask(__name__)
-
 @app.route("/")
 def index():
    return render_template('index.html')
+allData = []
 
 def calculate_degrees(passed_list):
    G = nx.DiGraph()
@@ -17,12 +17,16 @@ def calculate_degrees(passed_list):
    out_degrees = dict(G.out_degree())
 
    return {'degree': degrees, 'in_degrees': in_degrees, 'out_degrees': out_degrees} 
-
 @app.route("/api/data", methods=["POST"])
 def post_data():
+   global allData
    data = request.json
    csv_data = data.get('csvData', []) 
-   all_degrees = calculate_degrees(csv_data)
+   if len(allData) != 0:
+      allData.extend(csv_data)
+   else:
+       allData = csv_data
+   all_degrees = calculate_degrees(allData)
    return jsonify(all_degrees)
 
 if __name__ == '__main__':

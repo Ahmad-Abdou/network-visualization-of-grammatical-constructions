@@ -6,7 +6,9 @@ let mode = "force"
 let numberOfFiles = 0
 let treeInstances = []
 const chart = new Chart('#chart', 400, 400, margin)
-
+let nodes = new Map();
+let links = [];
+let previousVerb = null;
 
 function initializeVisualization() {
   d3.select('.tree-container').selectAll('svg').remove();
@@ -60,12 +62,10 @@ const StructuringFileHierarchy = (csvData, file) => {
 }
 
 const StructuringFileForce = (csvData) => {
-  let nodes = new Map();
-  let links = [];
+
 
   csvData.forEach(row => {
     const columns = Object.keys(row);
-    let previousVerb = null;
 
     columns.forEach(verbKey => {
       if (verbKey.startsWith('verb')) {
@@ -101,28 +101,28 @@ const buildHirearchy = (file) => {
       update: null
     };
     treeInstances.push(treeInstance);
-    try {
-      const response = await fetch('/api/data', {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({csvData})
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      force.degree = data.degree
-      force.in_degree = data.in_degrees
-      force.out_degree = data.out_degrees
-    } catch (error) {
-      console.error("Error posting data to server:", error);
-    }
     if(mode === 'tree' && tree) {
       tree.collapsable(root, treeInstance);
     } else if(mode === 'force' && force){
+      try {
+        const response = await fetch('/api/data', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({csvData})
+        });
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+  
+        const data = await response.json();
+        force.degree = data.degree
+        force.in_degree = data.in_degrees
+        force.out_degree = data.out_degrees
+      } catch (error) {
+        console.error("Error posting data to server:", error);
+      }
       const root = StructuringFileForce(csvData);
 
       force.forceSimulation(root);
