@@ -216,13 +216,12 @@ input[type="color"]::-webkit-color-swatch {
   position: fixed;
   top: 10px;
   left: 50%;
-  transform: translateX(-50%);
-  /* background-color: crimson; */
+  /* transform: translateX(-50%); */
   color: white;
   padding: 10px 20px;
   border-radius: 5px;
   z-index: 1000;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.3s, top 0.3s;
   pointer-events: none;
   
