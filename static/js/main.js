@@ -21,6 +21,10 @@ function initializeVisualization() {
     tree = new Tree('tree-svg', container.clientWidth, container.clientHeight);
   }
   
+  nodes.clear();
+  links = [];
+  previousVerb = null;
+  
   if (treeInstances.length > 0) {
     treeInstances.forEach(instance => {
       if (mode === 'tree' && tree) {
@@ -62,7 +66,9 @@ const StructuringFileHierarchy = (csvData, file) => {
 }
 
 const StructuringFileForce = (csvData) => {
-
+  const fileNodes = new Map();
+  const fileLinks = [];
+  let filePreviousVerb = null;
 
   csvData.forEach(row => {
     const columns = Object.keys(row);
@@ -71,24 +77,34 @@ const StructuringFileForce = (csvData) => {
       if (verbKey.startsWith('verb')) {
         const verbValue = row[verbKey];
         if (verbValue) {
-          if (!nodes.has(verbValue)) {
-            nodes.set(verbValue, {
+          if (!fileNodes.has(verbValue)) {
+            fileNodes.set(verbValue, {
               name: verbValue,
               year: row['year'],
               frequency: row['frequency']
             });
           }
-          if (previousVerb) {
-            links.push({ source: previousVerb, target: verbValue });
+          if (filePreviousVerb) {
+            fileLinks.push({ source: filePreviousVerb, target: verbValue });
           }
-          previousVerb = verbValue;
+          filePreviousVerb = verbValue;
         }
       }
     });
+    filePreviousVerb = null;
   });
 
-  return { nodes: Array.from(nodes.values()), links };
+  fileNodes.forEach((value, key) => {
+    if (!nodes.has(key)) {
+      nodes.set(key, value);
+    }
+  });
+  
+  links.push(...fileLinks);
+
+  return { nodes: Array.from(fileNodes.values()), links: fileLinks };
 }
+
 const buildHirearchy = (file) => {
   d3.csv(file).then(async (csvData) => {
     const nestedData = StructuringFileHierarchy(csvData, file);
@@ -123,9 +139,8 @@ const buildHirearchy = (file) => {
       } catch (error) {
         console.error("Error posting data to server:", error);
       }
-      const root = StructuringFileForce(csvData);
-
-      force.forceSimulation(root);
+      const forceData = StructuringFileForce(csvData);
+      force.forceSimulation(forceData);
     }
   });
 }

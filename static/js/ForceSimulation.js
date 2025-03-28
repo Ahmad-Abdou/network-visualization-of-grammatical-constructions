@@ -14,6 +14,7 @@ class ForceSimulation {
     this.degree = null
     this.in_degree = null
     this.out_degree = null
+    this.simulation = null
   }
 
 
@@ -23,7 +24,7 @@ class ForceSimulation {
 
     const nodes = root.nodes
     const links = root.links
-    const simulation = d3.forceSimulation(nodes)
+    this.simulation = d3.forceSimulation(nodes)
       .force("collide", d3.forceCollide(30).iterations(20))
       .force("center", d3.forceCenter(this.width / 2, this.height / 2))
       .force("link", d3.forceLink(links).id(d => d.name).distance(50).strength(1))
@@ -32,7 +33,7 @@ class ForceSimulation {
   
       const numIterations = nodes.length > 100 ? 100 : 300
       for (let i = 0; i < numIterations; i++) {
-        simulation.tick();
+        this.simulation.tick();
       }
 
     const selected_option_degree = document.querySelector('.degree-selection')
@@ -71,7 +72,7 @@ class ForceSimulation {
         } )
         .attr("cx", d => d.x)
         .attr("cy", d => d.y)
-        .call(this.drag(simulation));
+        .call(this.drag());
       
 
 
@@ -80,7 +81,7 @@ class ForceSimulation {
           return`Name: ${d.name}\n Degree: ${this.degree[d.name]}\n In_degree: ${this.in_degree[d.name]}\n Out_degree: ${this.out_degree[d.name]}`
         });
 
-      simulation.on("tick", () => {
+      this.simulation.on("tick", () => {
         link
             .attr("x1", d => d.source.x)
             .attr("y1", d => d.source.y)
@@ -136,7 +137,7 @@ class ForceSimulation {
       
       .attr("cx", d => d.x)
       .attr("cy", d => d.y)
-      .call(this.drag(simulation));
+      .call(this.drag());
       
 
 
@@ -146,7 +147,7 @@ class ForceSimulation {
       });
 
 
-    simulation.on("tick", () => {
+    this.simulation.on("tick", () => {
       link
           .attr("x1", d => d.source.x)
           .attr("y1", d => d.source.y)
@@ -171,10 +172,11 @@ class ForceSimulation {
     return this.nodeGroup.node();
   }
 
-  drag = simulation => {
+  drag = () => {
+    const sim = this.simulation;
   
     function dragstarted(event, d) {
-      if (!event.active) simulation.alphaTarget(0.3).restart();
+      if (!event.active) sim.alphaTarget(0.3).restart();
       d.fx = d.x;
       d.fy = d.y;
     }
@@ -185,7 +187,7 @@ class ForceSimulation {
     }
     
     function dragended(event, d) {
-      if (!event.active) simulation.alphaTarget(0);
+      if (!event.active) sim.alphaTarget(0);
       d.fx = null;
       d.fy = null;
     }
@@ -193,7 +195,7 @@ class ForceSimulation {
     return d3.drag()
         .on("start", dragstarted)
         .on("drag", dragged)
-        // .on("end", dragended);
+        .on("end", dragended)
   }
 
   calculatePredominantNode(node){
