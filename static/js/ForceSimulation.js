@@ -52,7 +52,8 @@ class ForceSimulation {
     
     this.setupFilterListeners(root)
 
-    return this.nodeGroup.node()
+    // return this.nodeGroup.node()
+    return this.simulation
   }
 
   initializeFilters(nodes) {

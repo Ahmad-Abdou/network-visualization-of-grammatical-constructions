@@ -1,21 +1,28 @@
 const playBtn = document.getElementById('playButton')
 const timeSlider = document.getElementById('timeSlider')
 const btnShape = document.getElementById('shape')
-
+let simulation_timeline = null
 let interval
 let isPlaying = false
 let isAlreadyStopped = false
 
 function startPlaying() {
     interval = setInterval(() => {
-    if (Number(timeSlider.value) >= Number(timeSlider.max)) {
+        if (Number(timeSlider.value) >= Number(timeSlider.max)) {
             stopPlaying()
             isAlreadyStopped = true
             return
         }
         timeSlider.value = Number(timeSlider.value) + 1
         isAlreadyStopped =  false
-    }, 10)
+        
+        // Apply alpha value according to timeline position
+        if (simulation_timeline) {
+            // Maps slider position to alpha value (0.1 to 1.0)
+            let alphaValue = 0.1 + (timeSlider.value / timeSlider.max) * 0.9;
+            simulation_timeline.alpha(alphaValue);
+        }
+    }, 100)  // Slowed down for better visualization
 }
 
 function stopPlaying() {
@@ -31,17 +38,25 @@ function stopPlaying() {
 }
 
 playBtn.addEventListener('click', () => {
-  if (!isPlaying) {
+    if (!isPlaying) {
         isPlaying = true
         btnShape.classList = 'run'
+        simulation_timeline.alpha(1).alphaTarget(0).alphaDecay(0.02).restart()
         startPlaying()
-  } else {
-      stopPlaying()
+    } else {
+        stopPlaying()
+        simulation_timeline.alpha(0)
     }
 })
 
 timeSlider.addEventListener('input', () => {
     if (Number(timeSlider.value) >= Number(timeSlider.max)) {
         stopPlaying()
+    }
+    
+    // Allow manual control via slider
+    if (simulation_timeline && !isPlaying) {
+        let alphaValue = 0.1 + (timeSlider.value / timeSlider.max) * 0.9;
+        simulation_timeline.alpha(alphaValue).restart();
     }
 })

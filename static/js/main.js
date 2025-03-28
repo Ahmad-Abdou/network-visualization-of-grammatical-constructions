@@ -140,7 +140,8 @@ const buildHirearchy = (file) => {
         console.error("Error posting data to server:", error);
       }
       const forceData = StructuringFileForce(csvData);
-      force.forceSimulation(forceData);
+      const simulation = force.forceSimulation(forceData);
+      simulation_timeline = simulation
     }
   });
 }
