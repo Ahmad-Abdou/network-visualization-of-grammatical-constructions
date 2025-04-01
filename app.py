@@ -29,5 +29,11 @@ def post_data():
    all_degrees = calculate_degrees(allData)
    return jsonify(all_degrees)
 
+@app.route('/api/data/reset', methods=["GET"])
+def reset_data():
+   global allData
+   allData = []
+   return jsonify({"status": "success", "message": "Data has been reset"})
+
 if __name__ == '__main__':
     app.run(debug=True)

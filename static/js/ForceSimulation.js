@@ -351,7 +351,7 @@ class ForceSimulation {
     const minValue = Math.min(...values)
     const maxValue = Math.max(...values)
 
-    const colorScale = d3.scaleSequential(d3.interpolateRainbow).domain([minValue, maxValue])
+    const colorScale = d3.scaleSequential(d3.interpolateBrBG).domain([minValue, maxValue])
     return colorScale(nodeDegree)
   }
 

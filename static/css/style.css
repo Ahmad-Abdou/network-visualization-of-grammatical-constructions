@@ -293,3 +293,14 @@ input[type="color"]::-webkit-color-swatch {
   cursor: pointer;
   outline: none;
 }
+.reset-btn{
+  background-color: #210F37;
+  color: white;
+  border-radius: 5px;
+  box-shadow: 1px 1px 3px 1px black;
+  cursor: pointer;
+  outline: none;
+  padding: 5px;
+  margin-left: 5px;
+
+}

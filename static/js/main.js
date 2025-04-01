@@ -9,6 +9,7 @@ const chart = new Chart('#chart', 400, 400, margin)
 let nodes = new Map();
 let links = [];
 let previousVerb = null;
+let reset_btn = document.querySelector('.reset-btn')
 
 function initializeVisualization() {
   d3.select('.tree-container').selectAll('svg').remove();
@@ -145,6 +146,28 @@ const buildHirearchy = (file) => {
     }
   });
 }
+
+// reset_btn.addEventListener('click', async () => {
+//   if(force) {
+//     d3.select(force).remove()
+//     const res = await fetch('/api/data/reset', {
+//       method: 'POST',
+//       headers : {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify({click: 'clicked'})
+//     })
+//   }
+// })
+
+
+
+reset_btn.addEventListener('click', async () => {
+  if(force) {
+    window.location.reload()
+    const res = await fetch('/api/data/reset')
+  }
+})
 
 window.onload = function() {
   document.querySelector('.file-input').addEventListener('change', getFileName);
