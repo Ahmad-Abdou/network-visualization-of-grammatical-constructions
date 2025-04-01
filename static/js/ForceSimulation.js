@@ -194,6 +194,10 @@ class ForceSimulation {
       .attr("cx", d => d.x)
       .attr("cy", d => d.y)
       .call(this.drag())
+    
+
+      this.showLabels(nodes)
+
       
     node.append("title")
       .text(d => {
@@ -233,7 +237,6 @@ class ForceSimulation {
       
       nodeSelection.each(function(d) {
         const node = d3.select(this)
-        
         const wordMatch = wordSearch && d.name.toLowerCase() === wordSearch
         const yearMatch = yearSearch && d.year?.toString().toLowerCase() === yearSearch
         const frequencyMatch = frequencySearch && d.frequency?.toString().toLowerCase() === frequencySearch
@@ -254,7 +257,6 @@ class ForceSimulation {
         } else {
           color = d3.select(this).attr('original-fill') || d3.select(this).attr('fill')
         }
-        
         node.transition().duration(750)
           .attr('fill', color)
           // .attr('r', matchCount ? 10 : node.attr('original-r') || node.attr('r'))
@@ -351,6 +353,60 @@ class ForceSimulation {
 
     const colorScale = d3.scaleSequential(d3.interpolateRainbow).domain([minValue, maxValue])
     return colorScale(nodeDegree)
+  }
+
+  showLabels(nodes) {
+    
+    const labelCheckBox = document.getElementById('labels')
+    labelCheckBox.addEventListener('change', (e) => {
+      if(e.target.checked) {
+        const labelGroup = d3.select('#node-group').append('g').attr('id', 'labels-group')
+
+        labelGroup.selectAll("text")
+        .data(nodes)
+        .join("text")
+        .text(d => d.name)
+        .attr("x", d => d.x)
+        .attr("y", d => d.y)
+        .attr('font-size', 12)
+        .attr('text-anchor', 'middle')
+        .attr('font-weight', '700')
+        .call(this.drag());
+      } else {
+        d3.select("#labels-group").remove();
+      }
+
+
+      
+        
+        // label.each(function(d) {
+        //   const text = d3.select(this)
+        //   const wordMatch = wordSearch && d.name.toLowerCase() === wordSearch
+        //   const yearMatch = yearSearch && d.year?.toString().toLowerCase() === yearSearch
+        //   const frequencyMatch = frequencySearch && d.frequency?.toString().toLowerCase() === frequencySearch
+          
+        //   const matchCount = [wordMatch, yearMatch, frequencyMatch].filter(Boolean).length
+          
+        //   let color
+        //   if (matchCount >= 2) {
+        //     color = overlapColor
+        //   } else if (matchCount === 1) {
+        //     if (wordMatch) {
+        //       color = wordColor
+        //     } else if (yearMatch) {
+        //       color = yearColor
+        //     } else if (frequencyMatch) {
+        //       color = frequencyColor
+        //     }
+        //   } else {
+        //     color = d3.select(this).attr('original-fill') || d3.select(this).attr('fill')
+        //   }
+        //   text.transition().duration(750)
+        //     .attr('fill', color)
+        //     .attr('font-size', d => d.name !== wordSearch ? 12 : 20)
+        // })
+      
+    })
   }
 }
 
