@@ -302,5 +302,12 @@ input[type="color"]::-webkit-color-swatch {
   outline: none;
   padding: 5px;
   margin-left: 5px;
+}
 
+.show-frequencies-container, .show-labels-container {
+  font-size: 16px;
+}
+
+.show-frequencies-container input, .show-labels-container input {
+  margin-right: 8px;
 }

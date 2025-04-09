@@ -196,6 +196,28 @@ class ForceSimulation {
         
     const linkEndpoints = new Set()
     
+    const linkFrequencies = []
+    
+    links.forEach(link => {
+      let sourceNode = typeof link.source === 'string' ? this.nodeMap.get(link.source) : link.source
+      let targetNode = typeof link.target === 'string' ? this.nodeMap.get(link.target) : link.target
+      
+      if (sourceNode && targetNode) {
+        const sourceFreq = sourceNode.frequency ? parseInt(sourceNode.frequency) : 0
+        const targetFreq = targetNode.frequency ? parseInt(targetNode.frequency) : 0
+        const combinedFreq = sourceFreq + targetFreq
+        linkFrequencies.push(combinedFreq)
+      }
+    })
+    
+    const minLinkFreq = Math.min(...linkFrequencies.filter(f => f > 0), 1)
+    const maxLinkFreq = Math.max(...linkFrequencies, 1)
+    const linkWidthScale = d3.scaleLinear()
+      .domain([minLinkFreq, maxLinkFreq])
+      .range([1, 3])
+    
+    const showFrequencies = document.getElementById('frequencies').checked
+    
     links.forEach((link, i) => {
       let sourceName, targetName
       let sourceNode, targetNode
@@ -231,18 +253,35 @@ class ForceSimulation {
         element: linkElement
       })
       
+      const sourceFreq = sourceNode.frequency ? parseInt(sourceNode.frequency) : 0
+      const targetFreq = targetNode.frequency ? parseInt(targetNode.frequency) : 0
+      const combinedFreq = sourceFreq + targetFreq
+      
+      const linkWidth = linkWidthScale(combinedFreq)
+      
       linkElement.append("line")
         .attr("stroke", "#555")
-        .attr("stroke-width", 2)
+        .attr("stroke-width", linkWidth)
         .attr("x1", sourceNode.x)
         .attr("y1", sourceNode.y)
         .attr("x2", targetNode.x)
         .attr("y2", targetNode.y)
       
+      linkElement.append("text")
+        .attr("class", "link-frequency")
+        .attr("text-anchor", "middle")
+        .attr("dy", -5)
+        .text(combinedFreq)
+        .attr("font-size", "10px")
+        .attr("fill", "#555")
+        .style("visibility", showFrequencies ? "visible" : "hidden")
+      
       linkElement.append("polygon")
         .attr("points", "0,-6 12,0 0,6")
         .attr("data-source", sourceName)
         .attr("data-target", targetName)
+      
+      link.combinedFrequency = combinedFreq
       
       this.updateLinkPosition(linkElement, sourceNode, targetNode)
       
@@ -283,6 +322,7 @@ class ForceSimulation {
         }
       }))
     
+    this.setupFrequencyToggle()
     this.setupSearch(node)
   }
 
@@ -303,6 +343,7 @@ class ForceSimulation {
     
     const line = linkElement.select("line")
     const arrow = linkElement.select("polygon")
+    const freqText = linkElement.select(".link-frequency")
     
     const sourceX = sourceNode.x
     const sourceY = sourceNode.y
@@ -328,6 +369,10 @@ class ForceSimulation {
       const arrowY = targetY - (dy / dist * offset)
       
       arrow.attr("transform", `translate(${arrowX},${arrowY}) rotate(${angle})`)
+      
+      const textX = sourceX + dx / 2
+      const textY = sourceY + dy / 2
+      freqText.attr("x", textX).attr("y", textY)
     }
   }
 
@@ -481,39 +526,17 @@ class ForceSimulation {
         .attr('font-weight', '700')
         .call(this.drag())
       } else {
-        d3.select("#labels-group").remove();
+        d3.select("#labels-group").remove()
       }
+    })
+  }
 
-
-      
-        
-        // label.each(function(d) {
-        //   const text = d3.select(this)
-        //   const wordMatch = wordSearch && d.name.toLowerCase() === wordSearch
-        //   const yearMatch = yearSearch && d.year?.toString().toLowerCase() === yearSearch
-        //   const frequencyMatch = frequencySearch && d.frequency?.toString().toLowerCase() === frequencySearch
-          
-        //   const matchCount = [wordMatch, yearMatch, frequencyMatch].filter(Boolean).length
-          
-        //   let color
-        //   if (matchCount >= 2) {
-        //     color = overlapColor
-        //   } else if (matchCount === 1) {
-        //     if (wordMatch) {
-        //       color = wordColor
-        //     } else if (yearMatch) {
-        //       color = yearColor
-        //     } else if (frequencyMatch) {
-        //       color = frequencyColor
-        //     }
-        //   } else {
-        //     color = d3.select(this).attr('original-fill') || d3.select(this).attr('fill')
-        //   }
-        //   text.transition().duration(750)
-        //     .attr('fill', color)
-        //     .attr('font-size', d => d.name !== wordSearch ? 12 : 20)
-        // })
-      
+  setupFrequencyToggle() {
+    const frequencyCheckBox = document.getElementById('frequencies')
+    frequencyCheckBox.addEventListener('change', (e) => {
+      const visibility = e.target.checked ? "visible" : "hidden"
+      this.linkGroup.selectAll(".link-frequency")
+        .style("visibility", visibility)
     })
   }
 }
