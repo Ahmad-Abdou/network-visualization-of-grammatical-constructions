@@ -16,13 +16,11 @@ function startPlaying() {
         timeSlider.value = Number(timeSlider.value) + 1
         isAlreadyStopped =  false
         
-        // Apply alpha value according to timeline position
         if (simulation_timeline) {
-            // Maps slider position to alpha value (0.1 to 1.0)
             let alphaValue = 0.1 + (timeSlider.value / timeSlider.max) * 0.9;
             simulation_timeline.alpha(alphaValue);
         }
-    }, 100)  // Slowed down for better visualization
+    }, 100)
 }
 
 function stopPlaying() {
@@ -54,7 +52,6 @@ timeSlider.addEventListener('input', () => {
         stopPlaying()
     }
     
-    // Allow manual control via slider
     if (simulation_timeline && !isPlaying) {
         let alphaValue = 0.1 + (timeSlider.value / timeSlider.max) * 0.9;
         simulation_timeline.alpha(alphaValue).restart();

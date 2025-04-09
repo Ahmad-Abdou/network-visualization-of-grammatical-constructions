@@ -73,11 +73,13 @@ const StructuringFileForce = (csvData) => {
 
   csvData.forEach(row => {
     const columns = Object.keys(row);
+    
+    filePreviousVerb = null;
 
     columns.forEach(verbKey => {
       if (verbKey.startsWith('verb')) {
         const verbValue = row[verbKey];
-        if (verbValue) {
+        if (verbValue && verbValue.trim()) {
           if (!fileNodes.has(verbValue)) {
             fileNodes.set(verbValue, {
               name: verbValue,
@@ -86,24 +88,19 @@ const StructuringFileForce = (csvData) => {
             });
           }
           if (filePreviousVerb) {
-            fileLinks.push({ source: filePreviousVerb, target: verbValue });
+            fileLinks.push({
+              source: filePreviousVerb,
+              target: verbValue
+            });
           }
           filePreviousVerb = verbValue;
         }
       }
     });
-    filePreviousVerb = null;
   });
 
-  fileNodes.forEach((value, key) => {
-    if (!nodes.has(key)) {
-      nodes.set(key, value);
-    }
-  });
-  
-  links.push(...fileLinks);
-
-  return { nodes: Array.from(fileNodes.values()), links: fileLinks };
+  const nodeArray = Array.from(fileNodes.values());
+  return { nodes: nodeArray, links: fileLinks };
 }
 
 const buildHirearchy = (file) => {
@@ -146,21 +143,6 @@ const buildHirearchy = (file) => {
     }
   });
 }
-
-// reset_btn.addEventListener('click', async () => {
-//   if(force) {
-//     d3.select(force).remove()
-//     const res = await fetch('/api/data/reset', {
-//       method: 'POST',
-//       headers : {
-//         "Content-Type": "application/json"
-//       },
-//       body: JSON.stringify({click: 'clicked'})
-//     })
-//   }
-// })
-
-
 
 reset_btn.addEventListener('click', async () => {
   if(force) {

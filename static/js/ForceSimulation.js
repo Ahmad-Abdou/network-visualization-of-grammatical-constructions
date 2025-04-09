@@ -34,7 +34,7 @@ class ForceSimulation {
     this.simulation = d3.forceSimulation(nodes)
       .force("collide", d3.forceCollide(30).iterations(20))
       .force("center", d3.forceCenter(this.width / 2, this.height / 2))
-      .force("link", d3.forceLink(links).id(d => d.name).distance(50).strength(1))
+      .force("link", d3.forceLink(links).id(d => d.name).distance(150).strength(1))
       .force("charge", d3.forceManyBody().distanceMin(200).distanceMax(1000).strength(-1))
       .stop()
   
@@ -162,18 +162,11 @@ class ForceSimulation {
   createVisualization(nodes, links) {
     const selected_option_degree = document.querySelector('.degree-selection')
     
-    const link = this.nodeGroup.append("g")
-      .attr("stroke", "#999")
-      .attr('id', 'links')
-      .attr("stroke-opacity", 0.6)
-      .selectAll("line")
-      .data(links)
-      .join("line")
-      .attr("x1", d => d.source.x)
-      .attr("y1", d => d.source.y)
-      .attr("x2", d => d.target.x)
-      .attr("y2", d => d.target.y)
-
+    this.linkGroup = this.nodeGroup.append("g").attr('id', 'links')
+    
+    this.nodeMap = new Map()
+    this.nodeRadiusMap = new Map()
+    
     const node = this.nodeGroup.append("g")
       .attr('id', 'nodes')
       .attr("fill", "crimson")
@@ -183,50 +176,159 @@ class ForceSimulation {
       .attr("fill", d => this.calculateNodeColor(d))
       .attr("stroke", d => d.children ? null : "#fff")
       .attr("r", (d) => {
+        let radius
         if (selected_option_degree.value === 'degree'){
-          return this.calculateDegree(d)
-        }else if (selected_option_degree.value === 'in_degree'){
-          return this.calculateInDegree(d)
-        }else if (selected_option_degree.value === 'out_degree'){
-          return this.calculateOutDegree(d)
+          radius = this.calculateDegree(d)
+        } else if (selected_option_degree.value === 'in_degree'){
+          radius = this.calculateInDegree(d)
+        } else if (selected_option_degree.value === 'out_degree'){
+          radius = this.calculateOutDegree(d)
         }
+        
+        radius = radius || 10
+        this.nodeRadiusMap.set(d.name, radius)
+        this.nodeMap.set(d.name, d) 
+        return radius
       })
       .attr("cx", d => d.x)
       .attr("cy", d => d.y)
       .call(this.drag())
+        
+    const linkEndpoints = new Set()
     
-
-      this.showLabels(nodes)
-
+    links.forEach((link, i) => {
+      let sourceName, targetName
+      let sourceNode, targetNode
       
+      if (typeof link.source === 'string') {
+        sourceName = link.source
+        sourceNode = this.nodeMap.get(sourceName)
+      } else {
+        sourceName = link.source.name
+        sourceNode = link.source
+      }
+      
+      if (typeof link.target === 'string') {
+        targetName = link.target
+        targetNode = this.nodeMap.get(targetName)
+      } else {
+        targetName = link.target.name
+        targetNode = link.target
+      }
+      
+      const linkKey = `${sourceName}-${targetName}`
+      
+      linkEndpoints.add(linkKey)
+      
+      const linkElement = this.linkGroup.append("g")
+        .attr("class", "link-group")
+        .attr("data-source", sourceName)
+        .attr("data-target", targetName)
+      
+      linkElement.datum({
+        source: sourceName,
+        target: targetName,
+        element: linkElement
+      })
+      
+      linkElement.append("line")
+        .attr("stroke", "#555")
+        .attr("stroke-width", 2)
+        .attr("x1", sourceNode.x)
+        .attr("y1", sourceNode.y)
+        .attr("x2", targetNode.x)
+        .attr("y2", targetNode.y)
+      
+      linkElement.append("polygon")
+        .attr("points", "0,-6 12,0 0,6")
+        .attr("data-source", sourceName)
+        .attr("data-target", targetName)
+      
+      this.updateLinkPosition(linkElement, sourceNode, targetNode)
+      
+    })
+
+    this.showLabels(nodes)
+    
     node.append("title")
       .text(d => {
         return`Name: ${d.name}\n Degree: ${this.degree[d.name]}\n In_degree: ${this.in_degree[d.name]}\n Out_degree: ${this.out_degree[d.name]}\n Year: ${d.year}\n Frequency: ${d.frequency}`
       })
 
     this.simulation.on("tick", () => {
-      link
-          .attr("x1", d => d.source.x)
-          .attr("y1", d => d.source.y)
-          .attr("x2", d => d.target.x)
-          .attr("y2", d => d.target.y)
-  
       node
-          .attr("cx", d => d.x)
-          .attr("cy", d => d.y)
+        .attr("cx", d => d.x)
+        .attr("cy", d => d.y)
+      
+      this.updateAllLinks()
+      
+      const labels = d3.select("#labels-group")
+      if (!labels.empty()) {
+        labels.selectAll("text")
+          .attr("x", d => d.x)
+          .attr("y", d => d.y)
+      }
     })
 
     this.nodeGroup.call(d3.zoom()
       .extent([[0, 0], [this.width, this.height]])
       .scaleExtent([-5, 8])
-      .on("zoom", zoomed))
-
-    function zoomed({transform}) {
-      node.attr("transform", transform)
-      link.attr("transform", transform)
-    }
+      .on("zoom", ({transform}) => {
+        node.attr("transform", transform)
+        this.linkGroup.attr("transform", transform)
+        
+        const labels = d3.select("#labels-group")
+        if (!labels.empty()) {
+          labels.attr("transform", transform)
+        }
+      }))
     
     this.setupSearch(node)
+  }
+
+  updateAllLinks() {
+    this.linkGroup.selectAll("g.link-group").each((d) => {
+      const sourceNode = this.nodeMap.get(d.source)
+      const targetNode = this.nodeMap.get(d.target)
+      if (sourceNode && targetNode) {
+        this.updateLinkPosition(d.element, sourceNode, targetNode)
+      } 
+    })
+  }
+
+  updateLinkPosition(linkElement, sourceNode, targetNode) {
+    if (!sourceNode || !targetNode) return
+    
+    const targetName = typeof targetNode === 'string' ? targetNode : targetNode.name
+    
+    const line = linkElement.select("line")
+    const arrow = linkElement.select("polygon")
+    
+    const sourceX = sourceNode.x
+    const sourceY = sourceNode.y
+    const targetX = targetNode.x
+    const targetY = targetNode.y
+    
+    line
+      .attr("x1", sourceX)
+      .attr("y1", sourceY)
+      .attr("x2", targetX)
+      .attr("y2", targetY)
+    
+    const dx = targetX - sourceX
+    const dy = targetY - sourceY
+    const dist = Math.sqrt(dx * dx + dy * dy)
+    
+    if (dist > 0) {
+      const nodeRadius = this.nodeRadiusMap.get(targetName) || 15
+      
+      const angle = Math.atan2(dy, dx) * 180 / Math.PI
+      const offset = nodeRadius + 12
+      const arrowX = targetX - (dx / dist * offset)
+      const arrowY = targetY - (dy / dist * offset)
+      
+      arrow.attr("transform", `translate(${arrowX},${arrowY}) rotate(${angle})`)
+    }
   }
 
   setupSearch(nodeSelection) {
@@ -276,6 +378,7 @@ class ForceSimulation {
 
   drag = () => {
     const sim = this.simulation
+    const self = this
   
     function dragstarted(event, d) {
       if (!event.active) sim.alphaTarget(0.3).restart()
@@ -286,6 +389,11 @@ class ForceSimulation {
     function dragged(event, d) {
       d.fx = event.x
       d.fy = event.y
+      
+      d.x = event.x
+      d.y = event.y
+      
+      self.updateAllLinks()
     }
     
     function dragended(event, d) {
@@ -295,9 +403,9 @@ class ForceSimulation {
     }
     
     return d3.drag()
-        .on("start", dragstarted)
-        .on("drag", dragged)
-        .on("end", dragended)
+      .on("start", dragstarted)
+      .on("drag", dragged)
+      .on("end", dragended)
   }
 
   calculatePredominantNode(node){
@@ -371,7 +479,7 @@ class ForceSimulation {
         .attr('font-size', 12)
         .attr('text-anchor', 'middle')
         .attr('font-weight', '700')
-        .call(this.drag());
+        .call(this.drag())
       } else {
         d3.select("#labels-group").remove();
       }

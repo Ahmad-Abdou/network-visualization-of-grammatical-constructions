@@ -75,88 +75,88 @@ const rightClick = (container, treeInstance, updateFunction) => {
         if (currentNode) {
           expand(currentNode, updateFunction);
         }
-      });
+      })
     
     deleteText.transition()
       .delay(320)
-      .style('opacity', 1);
+      .style('opacity', 1)
     
     expandText.transition()
       .delay(320)
-      .style('opacity', 1);
+      .style('opacity', 1)
 
-      hovering_rect_delete.on('mouseover', () => hovering_rect_delete.attr('opacity', 0.7));
-    deleteText.on('mouseover', () => hovering_rect_delete.attr('opacity', 0.7));
+      hovering_rect_delete.on('mouseover', () => hovering_rect_delete.attr('opacity', 0.7))
+    deleteText.on('mouseover', () => hovering_rect_delete.attr('opacity', 0.7))
     
-    hovering_rect_delete.on('mouseout', () => hovering_rect_delete.attr('opacity', 0));
-    deleteText.on('mouseout', () => hovering_rect_delete.attr('opacity', 0));
+    hovering_rect_delete.on('mouseout', () => hovering_rect_delete.attr('opacity', 0))
+    deleteText.on('mouseout', () => hovering_rect_delete.attr('opacity', 0))
 
-    hovering_rect_expand.on('mouseover', () => hovering_rect_expand.attr('opacity', 0.7));
-    expandText.on('mouseover', () => hovering_rect_expand.attr('opacity', 0.7));
+    hovering_rect_expand.on('mouseover', () => hovering_rect_expand.attr('opacity', 0.7))
+    expandText.on('mouseover', () => hovering_rect_expand.attr('opacity', 0.7))
     
-    hovering_rect_expand.on('mouseout', () => hovering_rect_expand.attr('opacity', 0));
-    expandText.on('mouseout', () => hovering_rect_expand.attr('opacity', 0));
-  });
+    hovering_rect_expand.on('mouseout', () => hovering_rect_expand.attr('opacity', 0))
+    expandText.on('mouseout', () => hovering_rect_expand.attr('opacity', 0))
+  })
   
   container.on('click', () => {
-    container.selectAll('.right-click-menu').remove();
-  });
+    container.selectAll('.right-click-menu').remove()
+  })
   
   tree.svg.on('contextmenu', function(event) {
     if (event.target.tagName === 'svg' || event.target.classList.contains('visualization-container')) {
-      container.selectAll('.right-click-menu').remove();
+      container.selectAll('.right-click-menu').remove()
     }
-  });
+  })
   tree.svg.on('click', () => {
-    container.selectAll('.right-click-menu').remove();
+    container.selectAll('.right-click-menu').remove()
   })
 }
 
 const deleteNode = (selectedNode, treeInstance) => {
     
   if (selectedNode.depth === 0) {
-    showNotification("Cannot delete root node", 'crimson');
-    return;
+    showNotification("Cannot delete root node", 'crimson')
+    return
   }
   
-  const parent = selectedNode.parent;
+  const parent = selectedNode.parent
   
   if (parent) {
 
     if (parent.children) {
-      parent.children = parent.children.filter(child => child.id !== selectedNode.id);
+      parent.children = parent.children.filter(child => child.id !== selectedNode.id)
       
       if (parent.children.length === 0) {
-        parent.children = null;
+        parent.children = null
       }
     }
     
     if (parent._children) {
-      parent._children = parent._children.filter(child => child.id !== selectedNode.id);
+      parent._children = parent._children.filter(child => child.id !== selectedNode.id)
       
       if (parent._children.length === 0) {
-        parent._children = null;
+        parent._children = null
       }
     }
-    treeInstance.update(null, parent);
-    treeInstance.container.selectAll('.right-click-menu').remove();
+    treeInstance.update(null, parent)
+    treeInstance.container.selectAll('.right-click-menu').remove()
   }
 }
 
 const expand = (node, updateFunction) => {
-  if (!node.x0) node.x0 = node.x || 0;
-  if (!node.y0) node.y0 = node.y || 0;
+  if (!node.x0) node.x0 = node.x || 0
+  if (!node.y0) node.y0 = node.y || 0
 
   if(node._children) {
-    node.children = node._children;
+    node.children = node._children
     node.children.forEach(child => {
-      child.x0 = node.x0;
-      child.y0 = node.y0;
+      child.x0 = node.x0
+      child.y0 = node.y0
       
       // if (child.data.year <= maxYearSliderValue.value) {
-        expand(child, updateFunction);
+        expand(child, updateFunction)
       // }
-    });
+    })
   }
   updateFunction(null, node)
 }
