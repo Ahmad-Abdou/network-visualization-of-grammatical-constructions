@@ -18,6 +18,10 @@ class ForceSimulation {
     this.allNodes = []
     this.allLinks = []
     this.layoutType = 'tree'
+    this.svg.append('g').attr('id', 'legend-group')
+    this.lowDeg = 0
+    this.maxDeg = 0
+    this.sorted = new Set()
   }
 
   reingoldTilfordLayout(nodes, links, rootNode = null, levelGap = 60, siblingGap = 40) {
@@ -176,7 +180,6 @@ class ForceSimulation {
     
     return nodes
   }
-
   forceSimulation(root) {
     d3.select('#node-group').remove()
     this.nodeGroup = this.svg.append('g').attr('id', 'node-group')
@@ -225,7 +228,6 @@ class ForceSimulation {
 
     return this.simulation
   }
-
   initializeFilters(nodes) {
     const nodeYears = new Set()
     const nodeFrequencies = new Set()
@@ -264,7 +266,6 @@ class ForceSimulation {
       frequencyFilterValue.textContent = minFreq
     }
   }
-
   setupFilterListeners(root) {
     d3.select('.min-year-filter-slide').on(`input.force`, (e) => {
       minYearFilterValue.textContent = e.target.value
@@ -287,7 +288,6 @@ class ForceSimulation {
       this.applyFilters()
     })
   }
-
   applyFilters() {
     let filteredNodes = this.allNodes
     
@@ -317,7 +317,6 @@ class ForceSimulation {
     
     this.updateVisualization(filteredNodes, filteredLinks)
   }
-
   updateVisualization(filteredNodes = this.allNodes, filteredLinks = this.allLinks) {
     d3.select('#nodes').remove()
     d3.select('#links').remove()
@@ -351,7 +350,6 @@ class ForceSimulation {
       this.simulation.alpha(0.3).restart()
     }
   }
-
   createVisualization(nodes, links) {
     const selected_option_degree = document.querySelector('.degree-selection')
     
@@ -359,7 +357,6 @@ class ForceSimulation {
     
     this.nodeMap = new Map()
     this.nodeRadiusMap = new Map()
-    
     const node = this.nodeGroup.append("g")
       .attr('id', 'nodes')
       .attr("fill", "crimson")
@@ -394,7 +391,8 @@ class ForceSimulation {
       .attr("cx", d => d.x)
       .attr("cy", d => d.y)
       .call(this.drag())
-        
+
+    this.createLegend()
     const linkEndpoints = new Set()
     
     const linkFrequencies = []
@@ -573,7 +571,6 @@ class ForceSimulation {
       freqText.attr("x", textX).attr("y", textY)
     }
   }
-
   setupSearch(nodeSelection) {
     const updateSearchDisplay = () => {
       const wordSearch = document.getElementById('searchWord').value.toLowerCase()
@@ -618,7 +615,6 @@ class ForceSimulation {
     document.getElementById('searchYear').addEventListener('input', updateSearchDisplay)
     document.getElementById('searchFrequency').addEventListener('input', updateSearchDisplay)
   }
-
   drag = () => {
     const sim = this.simulation
     const self = this
@@ -650,7 +646,6 @@ class ForceSimulation {
       .on("drag", dragged)
       .on("end", dragended)
   }
-
   calculatePredominantNode(node){
     const nodeDegree = this.degree[node.name]
     if (nodeDegree === undefined) return null
@@ -696,16 +691,17 @@ class ForceSimulation {
   }
   calculateNodeColor(node){
     const nodeDegree = this.degree[node.name]
+    this.sorted.add(nodeDegree)
     if (nodeDegree === undefined) return null
-
     const values = Object.values(this.degree)
-    const minValue = Math.min(...values)
-    const maxValue = Math.max(...values)
-
+    const sorted = values.sort()
+    const minValue = Math.min(...sorted)
+    const maxValue = Math.max(...sorted)
+    this.lowDeg = minValue
+    this.maxDeg = maxValue
     const colorScale = d3.scaleSequential(d3.interpolateBrBG).domain([minValue, maxValue])
     return colorScale(nodeDegree)
   }
-
   showLabels(nodes) {
     
     const labelCheckBox = document.getElementById('labels')
@@ -729,7 +725,6 @@ class ForceSimulation {
       }
     })
   }
-
   setupFrequencyToggle() {
     const frequencyCheckBox = document.getElementById('frequencies')
     frequencyCheckBox.addEventListener('change', (e) => {
@@ -737,6 +732,12 @@ class ForceSimulation {
       this.linkGroup.selectAll(".link-frequency")
         .style("visibility", visibility)
     })
+  }
+  createLegend() {
+    const colorScale = d3.scaleSequential(d3.interpolateBrBG).domain([this.lowDeg, this.maxDeg])
+    const sortedArr = [...this.sorted].sort((a, b) => a - b)
+    d3.select('#legend-group').selectAll('rect').data(sortedArr).join('rect').attr('width', 30).attr('height', 30).attr('y', (d,i) => (30 * i) + this.height/ 4 ).attr('x', 20).attr('fill', d => colorScale(d))
+    d3.select('#legend-group').selectAll('text').data(sortedArr).join('text').text(d => d).attr('y', (d,i) => (30 * i) + this.height/ 4  + 15).attr('x',(d,i) => 65).attr('font-size', 10)
   }
 }
 
