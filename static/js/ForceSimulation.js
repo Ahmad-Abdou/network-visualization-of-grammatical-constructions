@@ -17,6 +17,164 @@ class ForceSimulation {
     this.simulation = null
     this.allNodes = []
     this.allLinks = []
+    this.layoutType = 'tree'
+  }
+
+  reingoldTilfordLayout(nodes, links, rootNode = null, levelGap = 60, siblingGap = 40) {
+    const graph = new Map()
+    const inDegree = new Map()
+    
+    nodes.forEach(node => {
+      graph.set(node.name, [])
+      inDegree.set(node.name, 0)
+    })
+    
+    links.forEach(link => {
+      const source = typeof link.source === 'object' ? link.source.name : link.source
+      const target = typeof link.target === 'object' ? link.target.name : link.target
+      
+      if (graph.has(source) && graph.has(target)) {
+        graph.get(source).push(target)
+        inDegree.set(target, (inDegree.get(target) || 0) + 1)
+      }
+    })
+    
+    if (!rootNode) {
+      for (const [nodeName, degree] of inDegree.entries()) {
+        if (degree === 0) {
+          rootNode = nodeName
+          break
+        }
+      }
+    }
+    
+    if (!rootNode) {
+      let maxOutDegree = -1;
+      for (const [nodeName, children] of graph.entries()) {
+        if (children.length > maxOutDegree) {
+          maxOutDegree = children.length;
+          rootNode = nodeName;
+        }
+      }
+    }
+    
+    if (!rootNode && nodes.length > 0) {
+      rootNode = nodes[0].name;
+    }
+    
+    const positions = new Map()
+    let nextX = 0
+    
+    const visited = new Set()
+    const maxDepth = 100
+    
+    const layoutNode = (nodeName, depth) => {
+      if (visited.has(nodeName) || depth > maxDepth) {
+        return;
+      }
+      visited.add(nodeName);
+      
+      const children = graph.get(nodeName) || []
+      
+      if (children.length === 0) {
+        positions.set(nodeName, { x: nextX, y: depth * levelGap })
+        nextX += siblingGap
+      } else {
+        for (const child of children) {
+          if (!visited.has(child)) {
+            layoutNode(child, depth + 1)
+          }
+        }
+        
+        let sumX = 0
+        let count = 0
+        
+        for (const child of children) {
+          if (positions.has(child)) {
+            sumX += positions.get(child).x
+            count++
+          }
+        }
+        
+        const xPos = count > 0 ? sumX / count : nextX
+        
+        positions.set(nodeName, { 
+          x: xPos, 
+          y: depth * levelGap 
+        })
+        
+        if (count === 0) {
+          nextX += siblingGap
+        }
+      }
+    }
+    
+    if (nodes.length > 1000) {
+      const angleStep = (2 * Math.PI) / nodes.length
+      const radius = Math.min(this.width, this.height) * 0.4
+      
+      nodes.forEach((node, i) => {
+        const angle = i * angleStep
+        node.x = this.width / 2 + radius * Math.cos(angle)
+        node.y = this.height / 2 + radius * Math.sin(angle)
+      })
+      
+      return nodes
+    }
+    
+    try {
+      if (rootNode) {
+        layoutNode(rootNode, 0)
+      
+        let minX = Infinity
+        let maxX = -Infinity
+        
+        positions.forEach(pos => {
+          minX = Math.min(minX, pos.x)
+          maxX = Math.max(maxX, pos.x)
+        })
+        
+        const centerOffset = this.width / 2 - (maxX + minX) / 2
+        
+        const maxAllowedWidth = this.width * 0.8
+        let scale = 1;
+        if ((maxX - minX) > maxAllowedWidth) {
+          scale = maxAllowedWidth / (maxX - minX);
+        }
+        
+        nodes.forEach(node => {
+          if (positions.has(node.name)) {
+            const pos = positions.get(node.name)
+            node.x = (pos.x * scale) + centerOffset
+            node.y = pos.y + this.margin.top + 50
+            
+            const maxX = this.width - this.margin.right;
+            const minX = this.margin.left;
+            const maxY = this.height - this.margin.bottom;
+            const minY = this.margin.top;
+            
+            node.x = Math.max(minX, Math.min(maxX, node.x));
+            node.y = Math.max(minY, Math.min(maxY, node.y));
+          } else {
+            node.x = this.width / 2 + (Math.random() - 0.5) * 100
+            node.y = this.height / 2 + (Math.random() - 0.5) * 100
+          }
+        })
+      }
+    } catch (e) {
+      
+      const cols = Math.ceil(Math.sqrt(nodes.length))
+      const gridSize = Math.min(this.width, this.height) * 0.8 / cols
+      
+      nodes.forEach((node, i) => {
+        const col = i % cols
+        const row = Math.floor(i / cols)
+        node.x = this.margin.left + col * gridSize + gridSize/2
+        node.y = this.margin.top + row * gridSize + gridSize/2
+      })
+    }
+    
+    return nodes
   }
 
   forceSimulation(root) {
@@ -31,17 +189,30 @@ class ForceSimulation {
     
     this.initializeFilters(nodes)
     
+    if (this.layoutType === 'tree') {
+      this.reingoldTilfordLayout(nodes, links)
+    }
+    
     this.simulation = d3.forceSimulation(nodes)
-      .force("collide", d3.forceCollide(30).iterations(20))
+      .force("collide", d3.forceCollide(30).iterations(2))
       .force("center", d3.forceCenter(this.width / 2, this.height / 2))
-      .force("link", d3.forceLink(links).id(d => d.name).distance(150).strength(1))
-      .force("charge", d3.forceManyBody().distanceMin(200).distanceMax(1000).strength(-1))
-      .stop()
-  
+      .force("link", d3.forceLink(links).id(d => d.name).distance(150).strength(0.1))
+      .force("charge", d3.forceManyBody().strength(-100))
+      .alphaDecay(0.05)
+      
+
+    if (this.layoutType === 'tree') {
+      this.simulation.stop();
+      for (let i = 0; i < 1; i++) {
+        this.simulation.tick();
+      }
+    } else {
+      this.simulation.stop();
       const numIterations = nodes.length > 100 ? 100 : 300
-      for (let i = 0 ;i < numIterations ;i++) {
+      for (let i = 0; i < numIterations; i++) {
         this.simulation.tick()
       }
+    }
 
     const selected_option_degree = document.querySelector('.degree-selection')
     selected_option_degree.addEventListener('change', () => {
@@ -52,7 +223,6 @@ class ForceSimulation {
     
     this.setupFilterListeners(root)
 
-    // return this.nodeGroup.node()
     return this.simulation
   }
 
@@ -152,11 +322,34 @@ class ForceSimulation {
     d3.select('#nodes').remove()
     d3.select('#links').remove()
     
+    if (this.layoutType === 'tree') {
+      this.reingoldTilfordLayout(filteredNodes, filteredLinks)
+    } else {
+      if (!this.simulation) {
+        this.simulation = d3.forceSimulation(filteredNodes)
+          .force("collide", d3.forceCollide(30).iterations(20))
+          .force("center", d3.forceCenter(this.width / 2, this.height / 2))
+          .force("link", d3.forceLink(filteredLinks).id(d => d.name).distance(150).strength(1))
+          .force("charge", d3.forceManyBody().distanceMin(200).distanceMax(1000).strength(-1))
+          .stop()
+      } else {
+        this.simulation.nodes(filteredNodes)
+        this.simulation.force("link").links(filteredLinks)
+      }
+      
+      const numIterations = filteredNodes.length > 100 ? 100 : 300
+      for (let i = 0; i < numIterations; i++) {
+        this.simulation.tick()
+      }
+    }
+    
     this.createVisualization(filteredNodes, filteredLinks)
     
-    this.simulation.nodes(filteredNodes)
-    this.simulation.force("link").links(filteredLinks)
-    this.simulation.alpha(0.3).restart()
+    if (this.simulation) {
+      this.simulation.nodes(filteredNodes)
+      this.simulation.force("link").links(filteredLinks)
+      this.simulation.alpha(0.3).restart()
+    }
   }
 
   createVisualization(nodes, links) {
@@ -173,7 +366,14 @@ class ForceSimulation {
       .selectAll("circle")
       .data(nodes)
       .join("circle")
-      .attr("fill", d => this.calculateNodeColor(d))
+      .attr("fill", d => {
+        if (selected_option_degree.value === 'degree' || selected_option_degree.value === 'in_degree' || selected_option_degree.value === 'out_degree') {
+          return this.calculateNodeColor(d)
+        } else {
+          return '#ADBCE6'
+        }
+
+      })
       .attr("stroke", d => d.children ? null : "#fff")
       .attr("r", (d) => {
         let radius
@@ -183,9 +383,10 @@ class ForceSimulation {
           radius = this.calculateInDegree(d)
         } else if (selected_option_degree.value === 'out_degree'){
           radius = this.calculateOutDegree(d)
+        } else {
+          radius = 20
         }
         
-        radius = radius || 10
         this.nodeRadiusMap.set(d.name, radius)
         this.nodeMap.set(d.name, d) 
         return radius
@@ -301,12 +502,9 @@ class ForceSimulation {
       
       this.updateAllLinks()
       
-      const labels = d3.select("#labels-group")
-      if (!labels.empty()) {
-        labels.selectAll("text")
-          .attr("x", d => d.x)
-          .attr("y", d => d.y)
-      }
+      d3.select("#labels-group").selectAll("text")
+        .attr("x", d => d.x)
+        .attr("y", d => d.y - this.nodeRadiusMap.get(d.name))
     })
 
     this.nodeGroup.call(d3.zoom()
@@ -460,7 +658,7 @@ class ForceSimulation {
     const minValue = Math.min(...values)
     const maxValue = Math.max(...values)
   
-    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([3, 25])
+    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([8, 35])
   
     return scale(nodeDegree)
   }
@@ -471,7 +669,7 @@ class ForceSimulation {
     const minValue = Math.min(...values)
     const maxValue = Math.max(...values)
   
-    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([3, 25])
+    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([8, 35])
     return scale(nodeDegree)
   }
   calculateInDegree(node){
@@ -481,7 +679,7 @@ class ForceSimulation {
     const minValue = Math.min(...values)
     const maxValue = Math.max(...values)
   
-    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([3, 25])
+    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([8, 35])
 
     return scale(nodeDegree)
   }
@@ -492,7 +690,7 @@ class ForceSimulation {
     const minValue = Math.min(...values)
     const maxValue = Math.max(...values)
   
-    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([3, 25])
+    const scale = d3.scaleLinear().domain([minValue, maxValue]).range([8, 35])
   
     return scale(nodeDegree)
   }
@@ -524,6 +722,7 @@ class ForceSimulation {
         .attr('font-size', 12)
         .attr('text-anchor', 'middle')
         .attr('font-weight', '700')
+        .style('text-shadow', '0 0 3px white, 0 0 3px white, 0 0 3px white, 0 0 3px white')
         .call(this.drag())
       } else {
         d3.select("#labels-group").remove()
