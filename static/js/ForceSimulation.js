@@ -18,10 +18,12 @@ class ForceSimulation {
     this.allNodes = []
     this.allLinks = []
     this.layoutType = 'tree'
-    this.svg.append('g').attr('id', 'legend-group')
     this.lowDeg = 0
     this.maxDeg = 0
-    this.sorted = new Set()
+    this.Sorted_degree = new Set()
+    this.selected_option_degree = document.querySelector('.degree-selection')
+    this.labelCheckBox = document.getElementById('labels')
+
   }
 
   reingoldTilfordLayout(nodes, links, rootNode = null, levelGap = 60, siblingGap = 40) {
@@ -217,8 +219,7 @@ class ForceSimulation {
       }
     }
 
-    const selected_option_degree = document.querySelector('.degree-selection')
-    selected_option_degree.addEventListener('change', () => {
+    this.selected_option_degree.addEventListener('change', () => {
       this.updateVisualization()
     })
     
@@ -351,10 +352,10 @@ class ForceSimulation {
     }
   }
   createVisualization(nodes, links) {
-    const selected_option_degree = document.querySelector('.degree-selection')
     
     this.linkGroup = this.nodeGroup.append("g").attr('id', 'links')
-    
+    this.Sorted_degree.clear()
+
     this.nodeMap = new Map()
     this.nodeRadiusMap = new Map()
     const node = this.nodeGroup.append("g")
@@ -364,7 +365,7 @@ class ForceSimulation {
       .data(nodes)
       .join("circle")
       .attr("fill", d => {
-        if (selected_option_degree.value === 'degree' || selected_option_degree.value === 'in_degree' || selected_option_degree.value === 'out_degree') {
+        if (this.selected_option_degree.value === 'degree' || this.selected_option_degree.value === 'in_degree' || this.selected_option_degree.value === 'out_degree') {
           return this.calculateNodeColor(d)
         } else {
           return '#ADBCE6'
@@ -374,11 +375,12 @@ class ForceSimulation {
       .attr("stroke", d => d.children ? null : "#fff")
       .attr("r", (d) => {
         let radius
-        if (selected_option_degree.value === 'degree'){
+        d3.select('#legend-group').remove()
+        if (this.selected_option_degree.value === 'degree'){
           radius = this.calculateDegree(d)
-        } else if (selected_option_degree.value === 'in_degree'){
+        } else if (this.selected_option_degree.value === 'in_degree'){
           radius = this.calculateInDegree(d)
-        } else if (selected_option_degree.value === 'out_degree'){
+        } else if (this.selected_option_degree.value === 'out_degree'){
           radius = this.calculateOutDegree(d)
         } else {
           radius = 20
@@ -531,7 +533,6 @@ class ForceSimulation {
       } 
     })
   }
-
   updateLinkPosition(linkElement, sourceNode, targetNode) {
     if (!sourceNode || !targetNode) return
     
@@ -690,10 +691,22 @@ class ForceSimulation {
     return scale(nodeDegree)
   }
   calculateNodeColor(node){
-    const nodeDegree = this.degree[node.name]
-    this.sorted.add(nodeDegree)
-    if (nodeDegree === undefined) return null
-    const values = Object.values(this.degree)
+    let nodeDegree = null
+    let values = null
+    if (this.selected_option_degree.value === 'degree') {
+      nodeDegree = this.degree[node.name]
+      this.Sorted_degree.add(nodeDegree)
+      values = Object.values(this.degree)
+    } else if (this.selected_option_degree.value === 'in_degree') { 
+      nodeDegree = this.in_degree[node.name]
+      this.Sorted_degree.add(nodeDegree)
+      values = Object.values(this.in_degree)
+    } else if (this.selected_option_degree.value === 'out_degree') { 
+      nodeDegree = this.out_degree[node.name]
+      this.Sorted_degree.add(nodeDegree)
+      values = Object.values(this.out_degree)
+    }
+
     const sorted = values.sort()
     const minValue = Math.min(...sorted)
     const maxValue = Math.max(...sorted)
@@ -704,9 +717,9 @@ class ForceSimulation {
   }
   showLabels(nodes) {
     
-    const labelCheckBox = document.getElementById('labels')
-    labelCheckBox.addEventListener('change', (e) => {
+    this.labelCheckBox.addEventListener('change', (e) => {
       if(e.target.checked) {
+        d3.select("#labels-group").remove()
         const labelGroup = d3.select('#node-group').append('g').attr('id', 'labels-group')
 
         labelGroup.selectAll("text")
@@ -734,10 +747,38 @@ class ForceSimulation {
     })
   }
   createLegend() {
-    const colorScale = d3.scaleSequential(d3.interpolateBrBG).domain([this.lowDeg, this.maxDeg])
-    const sortedArr = [...this.sorted].sort((a, b) => a - b)
-    d3.select('#legend-group').selectAll('rect').data(sortedArr).join('rect').attr('width', 30).attr('height', 30).attr('y', (d,i) => (30 * i) + this.height/ 4 ).attr('x', 20).attr('fill', d => colorScale(d))
-    d3.select('#legend-group').selectAll('text').data(sortedArr).join('text').text(d => d).attr('y', (d,i) => (30 * i) + this.height/ 4  + 15).attr('x',(d,i) => 65).attr('font-size', 10)
+    if (this.selected_option_degree.value === 'degree' || this.selected_option_degree.value === 'in_degree' || this.selected_option_degree.value === 'out_degree') {
+      this.svg.append('g').attr('id', 'legend-group')
+      const colorScale = d3.scaleSequential(d3.interpolateBrBG).domain([this.lowDeg, this.maxDeg])
+      const sortedArr = [...this.Sorted_degree].sort((a, b) => a - b)
+      d3.select('#legend-group')
+      .selectAll('rect')
+      .data(sortedArr)
+      .join('rect')
+      .attr('width', 30)
+      .attr('height', 30)
+      .attr('y', (d,i) => (30 * i) + this.height/ 4 )
+      .attr('x', 20).attr('fill', d => colorScale(d))
+      .on('mouseover', (event) => {
+        d3.selectAll('circle').transition().attr('opacity', 1)
+        const selectedLegendColor = d3.select(event.target).attr('fill')
+        d3.selectAll('circle').filter(function (){
+          return d3.select(this).attr('fill') !== selectedLegendColor
+        }).transition()
+        .attr('opacity', 0.1)
+      }).on('mouseout', () => {
+        d3.selectAll('circle').transition().attr('opacity', 1)
+      })
+
+
+      d3.select('#legend-group')
+      .selectAll('text')
+      .data(sortedArr)
+      .join('text')
+      .text(d => d)
+      .attr('y', (d,i) => (30 * i) + this.height/ 4  + 15)
+      .attr('x',(d,i) => 65).attr('font-size', 10)
+    }
   }
 }
 
